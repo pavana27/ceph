@@ -32,7 +32,7 @@ set(librbd_internal_srcs
   api/Snapshot.cc
   cache/ImageWriteback.cc
   cache/ObjectCacherObjectDispatch.cc
-  cache/PassthroughImageCache.cc
+  cache/PrefetchImageCache.cc
   deep_copy/ImageCopyRequest.cc
   deep_copy/MetadataCopyRequest.cc
   deep_copy/ObjectCopyRequest.cc
