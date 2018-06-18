@@ -131,7 +131,7 @@ namespace librbd {
 
     file_layout_t layout;
 
-    cache::ImageCache *image_cache = nullptr;
+    cache::ImageCache *image_cache;
 
     Readahead readahead;
     uint64_t total_bytes_read;

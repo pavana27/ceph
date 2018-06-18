@@ -32,6 +32,7 @@
 #include "librbd/io/ImageRequestWQ.h"
 #include "librbd/io/ObjectDispatcher.h"
 #include "librbd/journal/StandardPolicy.h"
+#include "librbd/cache/PrefetchImageCache.h" 
 
 #include "osdc/Striper.h"
 #include <boost/bind.hpp>
@@ -125,7 +126,8 @@ public:
       exclusive_lock(nullptr), object_map(nullptr),
       io_work_queue(nullptr), op_work_queue(nullptr),
       asok_hook(nullptr),
-      trace_endpoint("librbd")
+      trace_endpoint("librbd"),
+      image_cache()
   {
     md_ctx.dup(p);
     data_ctx.dup(p);
@@ -148,6 +150,8 @@ public:
       exclusive_lock_policy = new exclusive_lock::StandardPolicy(this);
     }
     journal_policy = new journal::StandardPolicy<ImageCtx>(this);
+
+    image_cache = new cache::PrefetchImageCache<ImageCtx>(*this);
   }
 
   ImageCtx::~ImageCtx() {
