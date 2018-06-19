@@ -4,8 +4,12 @@
 #ifndef CEPH_LIBRBD_CACHE_PREFETCH_IMAGE_CACHE
 #define CEPH_LIBRBD_CACHE_PREFETCH_IMAGE_CACHE
 
+#define CACHE_CHUNK_SIZE 1024
+
 #include "ImageCache.h"
 #include "ImageWriteback.h"
+#include <deque>
+#include <unordered_map>
 
 namespace librbd {
 
@@ -48,6 +52,15 @@ public:
 private:
   ImageCtxT &m_image_ctx;
   ImageWriteback<ImageCtxT> m_image_writeback;
+
+  // map for cache entries
+  typedef std::unordered_map<uint64_t, ceph::bufferlist *> ImageCacheEntries;
+	ImageCacheEntries *cache_entries;
+
+  // queue for handling LRU eviction 
+  typedef std::deque<struct CacheEntry> LRUQueue;
+  LRUQueue *lru_queue;
+
 
 };
 

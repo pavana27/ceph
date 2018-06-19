@@ -17,6 +17,8 @@ namespace cache {
 template <typename I>
 PrefetchImageCache<I>::PrefetchImageCache(ImageCtx &image_ctx)
   : m_image_ctx(image_ctx), m_image_writeback(image_ctx) {
+  CephContext *cct = m_image_ctx.cct;
+  ldout(cct, 10) << "lru_queue=" << lru_queue << ", cache_entries=" << cache_entries << dendl;
 }
 
 template <typename I>
