@@ -110,6 +110,10 @@ void ImageRequest<I>::send() {
     return;
   }
 
+  ldout(cct, 10) << "bypass image cache? " << m_bypass_image_cache 
+		 << " and addr of image cache: " << m_image_ctx.image_cache
+		 << dendl;
+
   if (m_bypass_image_cache || m_image_ctx.image_cache == nullptr) {
     send_request();
   } else {
@@ -163,6 +167,9 @@ template <typename I>
 void ImageReadRequest<I>::send_request() {
   I &image_ctx = this->m_image_ctx;
   CephContext *cct = image_ctx.cct;
+  
+  ldout(cct, 10) << "sending request normally with " 
+		 << "ImageReadRequest::send_request()" << dendl;
 
   auto &image_extents = this->m_image_extents;
   if (image_ctx.cache && image_ctx.readahead_max_bytes > 0 &&
@@ -228,6 +235,7 @@ template <typename I>
 void ImageReadRequest<I>::send_image_cache_request() {
   I &image_ctx = this->m_image_ctx;
   assert(image_ctx.image_cache != nullptr);
+  ldout(image_ctx.cct, 10) << "inside cache request " << dendl;
 
   AioCompletion *aio_comp = this->m_aio_comp;
   aio_comp->set_request_count(1);
