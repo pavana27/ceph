@@ -119,9 +119,38 @@ void PrefetchImageCache<I>::aio_compare_and_write(Extents &&image_extents,
 
 template <typename I>
 void PrefetchImageCache<I>::init(Context *on_finish) {
-  CephContext *cct = m_image_ctx.cct;
+  CephContext *cct = m_image_ctx.cct;    //for logging purposes
   ldout(cct, 20) << dendl;
 
+  //iterates through the bufferlist -- though it might not be needed
+  ceph::bufferlist::const_iterator me = begin();
+      while (!me.end()) {
+	++me;
+      }
+
+      //just wants to see the result of the bufferlist
+  for (auto const &pair: ImageCacheEntries)
+	  std::cout << "{" << pair.first << " -> " << pair.second << "}\n";
+
+  ceph::bufferlist * bl;
+  uint64_t be;
+
+  //begin initializing LRU and hash table.
+  LRUQueue lru_q = LRUQueue();
+  ImageCacheEntries ImageCacheEntry = ImageCacheEntries();
+
+  ImageCacheEntry.insert(std::make_pair<uint64_t, ceph::bufferlist *>(be, bl));
+
+  //arbitrary size 26, could be any size
+  deque<char> deque1(26, '0');
+
+  deque<char>::iterator i;
+
+  //populates the deque with 26 elements. 
+    for (i = deque1.begin(); i != deque1.end(); ++i)
+    cout << *i << endl;
+
+    
   on_finish->complete(0);
 
 	// init() called where? which context to use for on_finish?
@@ -131,7 +160,8 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
 
 	// see librbd/Utils.h line 132 for create_context_callback which seems to be the kind of context that's needed for on_finish
 }
-
+	
+	
 template <typename I>
 void PrefetchImageCache<I>::shut_down(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
