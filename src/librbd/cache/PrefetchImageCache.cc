@@ -167,9 +167,26 @@ void PrefetchImageCache<I>::shut_down(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << dendl;
 
-  on_finish->complete(0);
-}
+	//erases the content of the LRU queue
+	//since the content are ints, there's no need for deallocation
+	//by using the erase-remove idiom
+	lru_q -> erase(std::remove_if(lru_q->begin(), lru_q->end(), true), lru_q->end());
 
+	//calls the destructor which therefore destroys the object, not just only the reference to the object. 
+	lru_q -> clear();
+
+	
+	/* erases the content of the hash table */
+
+	//pointer to a hash table
+	ImageCacheEntries *cache_entries;
+
+ 	// the hash table container, along with the objects in it
+	delete cache_entries;
+						
+	}
+	
+	
 template <typename I>
 void PrefetchImageCache<I>::invalidate(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
