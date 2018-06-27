@@ -136,21 +136,23 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   uint64_t be;
 
   //begin initializing LRU and hash table.
-  LRUQueue lru_q = LRUQueue();
-  ImageCacheEntries ImageCacheEntry = ImageCacheEntries();
+  LRUQueue *lru_q = new LRUQueue();
+  ImageCacheEntries imageCacheEntry = new ImageCacheEntries();
+  
+  
 
   ImageCacheEntry.insert(std::make_pair<uint64_t, ceph::bufferlist *>(be, bl));
 
-  //arbitrary size 26, could be any size
-  deque<char> deque1(26, '0');
+  // //arbitrary size 26, could be any size
+  // deque<char> deque1(26, '0');
 
-  deque<char>::iterator i;
+  // deque<char>::iterator i;
 
-  //populates the deque with 26 elements. 
-    for (i = deque1.begin(); i != deque1.end(); ++i)
-    cout << *i << endl;
+  // //populates the deque with 26 elements. 
+  //   for (i = deque1.begin(); i != deque1.end(); ++i)
+  //   cout << *i << endl;
 
-    
+  //don't know how to implement on_finish
   on_finish->complete(0);
 
 	// init() called where? which context to use for on_finish?
