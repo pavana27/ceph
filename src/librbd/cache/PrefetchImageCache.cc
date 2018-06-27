@@ -137,7 +137,7 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
 
   //begin initializing LRU and hash table.
   LRUQueue *lru_q = new LRUQueue();
-  ImageCacheEntries imageCacheEntry = new ImageCacheEntries();
+  ImageCacheEntries *imageCacheEntry = new ImageCacheEntries();
   
   
 
