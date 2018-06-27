@@ -48,6 +48,12 @@ public:
 
   void invalidate(Context *on_finish) override;
   void flush(Context *on_finish) override;
+  
+  //andrew I added these accessor methods to actually get the data structures for the init function
+  //this is required right?
+  std::deque<struct CacheEntry> * getQueue(){ return lru_queue;}
+  std::unordered_map<uint64_t, ceph::bufferlist *> * getHashTable{ return cache_entries;}
+  	
 
 private:
   ImageCtxT &m_image_ctx;
