@@ -62,7 +62,11 @@ private:
   // queue for handling LRU eviction 
   typedef std::deque<struct CacheEntry> LRUQueue;
   LRUQueue *lru_queue;
-
+ 
+  //chunking data structure
+  typedef std::vector<pair<uint64_t,uint64_t>> chunkedEntry;
+  //not sure if pointer is needed here...
+  
 
 };
 
