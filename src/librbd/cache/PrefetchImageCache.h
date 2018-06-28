@@ -48,6 +48,8 @@ public:
 
   void invalidate(Context *on_finish) override;
   void flush(Context *on_finish) override;
+  
+  
 
 private:
   ImageCtxT &m_image_ctx;
@@ -59,10 +61,13 @@ private:
 
   // queue for handling LRU eviction 
   typedef std::deque<struct CacheEntry> LRUQueue;
-  LRUQueue *lru_queue; 
 
-	Extents extent_to_chunks(Extents image_extents); 
-
+  LRUQueue *lru_queue;
+ 
+  Extents extent_to_chunks(Extents image_extents); 
+  
+  //chunking data structure
+  typedef std::vector<pair<uint64_t,uint64_t>> chunkedEntry;
 
 };
 
