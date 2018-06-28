@@ -81,6 +81,38 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 }
 
 template <typename I>
+ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(Extents image_extents) {
+
+  Extents::iterator itr;
+  Extents::iterator itrD;
+
+  itr = image_extents.begin();
+  Extents chunkedExtent;
+
+  chunkedExtent.push_back(std::make_pair(itr->first,itr->second));
+
+  chunkedExtent.insert(chunkedExtent.begin() + 1, std::make_pair(itr->first,itr->second));
+  itrD = chunkedExtent.begin();
+
+  uint64_t offset = itr->first;
+  uint64_t length = itr->second;
+
+  if (offset%CACHE_CHUNK_SIZE != 0) {
+    chunkedExtent[0].first = offset-offset%CACHE_CHUNK_SIZE;
+  }
+  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {
+    itr++;
+  } else if ((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE) {
+    chunkedExtent[0].second = (length+CACHE_CHUNK_SIZE-(offset+(length%CACHE_CHUNK_SIZE))) + length;
+  } else {
+      chunkedExtent[0].first = offset;
+      chunkedExtent[0].second = length;
+  }
+
+  return chunkedExtent;
+}
+  
+template <typename I>
 void PrefetchImageCache<I>::aio_write(Extents &&image_extents,
                                          bufferlist&& bl,
                                          int fadvise_flags,
