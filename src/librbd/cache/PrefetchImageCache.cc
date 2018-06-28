@@ -55,8 +55,8 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
                              on_finish);
 }
 
-Extents extentToChunks(Extents image_extents){
-  uint64_t size;
+template <typename I>
+ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(Extents image_extents) {
 
   Extents::iterator itr;
   Extents::iterator itrD;
@@ -66,26 +66,24 @@ Extents extentToChunks(Extents image_extents){
 
   chunkedExtent.push_back(std::make_pair(itr->first,itr->second));
 
-  chunkedExtent.insert(chunkedExtent.begin()+1, std::make_pair(itr->first,itr->second));
+  chunkedExtent.insert(chunkedExtent.begin() + 1, std::make_pair(itr->first,itr->second));
   itrD = chunkedExtent.begin();
 
   uint64_t offset = itr->first;
   uint64_t length = itr->second;
 
-  //Extents chunk =
   if (offset%CACHE_CHUNK_SIZE != 0) {
     chunkedExtent[0].first = offset-offset%CACHE_CHUNK_SIZE;
   }
   if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {
     itr++;
-  } else if((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE){
+  } else if ((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE) {
     chunkedExtent[0].second = (length+CACHE_CHUNK_SIZE-(offset+(length%CACHE_CHUNK_SIZE))) + length;
-  }else{
+  } else {
       chunkedExtent[0].first = offset;
       chunkedExtent[0].second = length;
-    }
+  }
 
-  cout << itrD->first << " " << itrD->second << endl;
   return chunkedExtent;
 }
   

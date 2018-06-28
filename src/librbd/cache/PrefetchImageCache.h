@@ -59,7 +59,9 @@ private:
 
   // queue for handling LRU eviction 
   typedef std::deque<struct CacheEntry> LRUQueue;
-  LRUQueue *lru_queue;
+  LRUQueue *lru_queue; 
+
+	Extents extent_to_chunks(Extents image_extents); 
 
 
 };
