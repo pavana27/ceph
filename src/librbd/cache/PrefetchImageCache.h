@@ -67,6 +67,10 @@ private:
   typedef std::vector<pair<uint64_t,uint64_t>> chunkedEntry;
   //not sure if pointer is needed here...
   
+  LRUQueue *lru_queue; 
+
+	Extents extent_to_chunks(Extents image_extents); 
+
 
 };
 
