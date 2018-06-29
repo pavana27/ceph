@@ -57,7 +57,7 @@ private:
 
   // map for cache entries
   typedef std::unordered_map<uint64_t, ceph::bufferlist *> ImageCacheEntries;
-	ImageCacheEntries *cache_entries;
+  ImageCacheEntries *cache_entries;
 
   // queue for handling LRU eviction 
   typedef std::deque<struct CacheEntry> LRUQueue;
@@ -71,6 +71,8 @@ private:
 
 	Extents extent_to_chunks(Extents image_extents); 
 
+
+  
 
 };
 
