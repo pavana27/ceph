@@ -57,17 +57,17 @@ private:
 
   // map for cache entries
   typedef std::unordered_map<uint64_t, ceph::bufferlist *> ImageCacheEntries;
-	ImageCacheEntries *cache_entries;
+  ImageCacheEntries *cache_entries;
 
   // queue for handling LRU eviction 
   typedef std::deque<struct CacheEntry> LRUQueue;
-
   LRUQueue *lru_queue;
  
+
   Extents extent_to_chunks(Extents image_extents); 
   
   //chunking data structure
-  typedef std::vector<pair<uint64_t,uint64_t>> chunkedEntry;
+  typedef std::vector<std::pair<uint64_t, uint64_t> > chunkedEntry;
 
 };
 

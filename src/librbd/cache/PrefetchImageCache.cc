@@ -71,7 +71,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 	//else read from cluster
 	else{
   // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags,            //do we assume that it's already in the (read) bufferlist 
+		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);           //do we assume that it's already in the (read) bufferlist 
 	
 	//call chunking/splitting function again from @Leo's code
 	
