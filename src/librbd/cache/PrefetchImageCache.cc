@@ -58,7 +58,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 	ImageCacheEntries temp; 
 	//checks to see if cache is empty
 	//if it is, read chunks,	//else read from cluster
-	if(!(imageCacheEntry->empty()){
+	if(!(imageCacheEntry->empty())){
 	//iterate over the hash table
 	for(auto it: *imageCacheEntry){
 
@@ -179,16 +179,6 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;    //for logging purposes
   ldout(cct, 20) << dendl;
 
-  //iterates through the bufferlist -- though it might not be needed
-  ceph::bufferlist::const_iterator me = begin();
-      while (!me.end()) {
-	++me;
-      }
-
-      //just wants to see the result of the bufferlist
-  for (auto const &pair: ImageCacheEntries)
-	  std::cout << "{" << pair.first << " -> " << pair.second << "}\n";
-
   ceph::bufferlist * bl;
   uint64_t be;
 
@@ -198,7 +188,7 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   
   
 
-  ImageCacheEntry.insert(std::make_pair<uint64_t, ceph::bufferlist *>(be, bl));
+  imageCacheEntry.insert(std::make_pair<uint64_t, ceph::bufferlist *>(be, bl));
 
   // //arbitrary size 26, could be any size
   // deque<char> deque1(26, '0');
