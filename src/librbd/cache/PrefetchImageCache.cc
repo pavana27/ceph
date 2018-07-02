@@ -50,6 +50,9 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
 
+  // for each extent in image_extents:
+    // split into chunks, align to block boundaries, pad first/last?
+  
   // writeback's aio_read method used for reading from cluster
   m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags,
                              on_finish);

@@ -58,7 +58,7 @@ private:
 	ImageCacheEntries *cache_entries;
 
   // queue for handling LRU eviction 
-  typedef std::deque<struct CacheEntry> LRUQueue;
+  typedef std::deque<uint64_t> LRUQueue;
   LRUQueue *lru_queue;
 
 
