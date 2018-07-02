@@ -1,6 +1,6 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
-//testing this is Tommy writing a simple comment
+
 #include "PrefetchImageCache.h"
 #include "include/buffer.h"
 #include "common/dout.h"
@@ -49,11 +49,11 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
-
+/*
 	//get the extents, then call the splitting/chunking function from @Leo's code
 
 	//begin read from cache
-	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = imageCacheEntry->begin();
+	ImageCacheEntries::iterator it = cache_entries->begin();
 
 	ImageCacheEntries temp; 
 	//checks to see if cache is empty
@@ -64,18 +64,17 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 
 		//right now, I have it set so that whatever chunk data we get, it is stored in a temp hash table with the same type as the cache type.
 		//i don't know how to make this into a "reassembly" buffer...
-		/****************** PROBABLY USING the @param bufferlist *bl? **********************/
 				temp.insert(std::make_pair(it.first, it.second));
 			 }
 		}
 	//else read from cluster
-	else{
+	else{ */
   // writeback's aio_read method used for reading from cluster
 		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);           //do we assume that it's already in the (read) bufferlist 
 	
 	//call chunking/splitting function again from @Leo's code
 	
-	}
+//	}
 
 
 }
@@ -178,7 +177,7 @@ template <typename I>
 void PrefetchImageCache<I>::init(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;    //for logging purposes
   ldout(cct, 20) << dendl;
-
+/*
   ceph::bufferlist * bl;
   uint64_t be;
 
@@ -198,8 +197,7 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   // //populates the deque with 26 elements. 
   //   for (i = deque1.begin(); i != deque1.end(); ++i)
   //   cout << *i << endl;
-
-  //don't know how to implement on_finish
+*/
   on_finish->complete(0);
 
 	// init() called where? which context to use for on_finish?
@@ -215,7 +213,7 @@ template <typename I>
 void PrefetchImageCache<I>::shut_down(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << dendl;
-
+/*
 	//erases the content of the LRU queue
 	//since the content are ints, there's no need for deallocation
 	//by using the erase-remove idiom
@@ -225,14 +223,14 @@ void PrefetchImageCache<I>::shut_down(Context *on_finish) {
 	lru_q -> clear();
 
 	
-	/* erases the content of the hash table */
+	// erases the content of the hash table
 
 	//pointer to a hash table
 	ImageCacheEntries *cache_entries;
 
  	// the hash table container, along with the objects in it
 	delete cache_entries;
-						
+		*/				
 	}
 	
 	
