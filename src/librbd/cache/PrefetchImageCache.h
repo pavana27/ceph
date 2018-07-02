@@ -3,7 +3,7 @@
 
 #ifndef CEPH_LIBRBD_CACHE_PREFETCH_IMAGE_CACHE
 #define CEPH_LIBRBD_CACHE_PREFETCH_IMAGE_CACHE
-
+#define HASH_SIZE 1048576
 #define CACHE_CHUNK_SIZE 1024
 
 #include "ImageCache.h"
@@ -62,17 +62,14 @@ private:
   // queue for handling LRU eviction 
   typedef std::deque<uint64_t> LRUQueue;
   LRUQueue *lru_queue;
- 
-  //chunking data structure
-  typedef std::vector<pair<uint64_t,uint64_t>> chunkedEntry;
-  //not sure if pointer is needed here...
   
-  LRUQueue *lru_queue; 
 
-	Extents extent_to_chunks(Extents image_extents); 
 
 
   
+
+  Extents extent_to_chunks(Extents image_extents); 
+	Extents_vec * extents_list;
 
 };
 
