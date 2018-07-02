@@ -49,32 +49,26 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
-/*
+
 	//get the extents, then call the splitting/chunking function from @Leo's code
 
 	//begin read from cache
-	ImageCacheEntries::iterator it = cache_entries->begin();
+  
+  // writeback's aio_read method used for reading from cluster
+	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
 
 	ImageCacheEntries temp; 
 	//checks to see if cache is empty
-	//if it is, read chunks,	//else read from cluster
-	if(!(imageCacheEntry->empty())){
-	//iterate over the hash table
-	for(auto it: *imageCacheEntry){
-
-		//right now, I have it set so that whatever chunk data we get, it is stored in a temp hash table with the same type as the cache type.
-		//i don't know how to make this into a "reassembly" buffer...
-				temp.insert(std::make_pair(it.first, it.second));
-			 }
-		}
+	//if it is, read chunks,
+	//copying the hash table of cache to a temporary hash table.
 	//else read from cluster
-	else{ */
-	  // for each extent in image_extents:
-	    // split into chunks, align to block boundaries, pad first/last?
-  
+	if(!(cache_entries->empty())){
+		temp = *cache_entries;
+	//else read from cluster
+	}	else{
   // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);           //do we assume that it's already in the (read) bufferlist 
-	
+		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
+	}
 	//call chunking/splitting function again from @Leo's code
 	
 //	}
@@ -180,27 +174,14 @@ template <typename I>
 void PrefetchImageCache<I>::init(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;    //for logging purposes
   ldout(cct, 20) << dendl;
-/*
-  ceph::bufferlist * bl;
-  uint64_t be;
 
   //begin initializing LRU and hash table.
-  LRUQueue *lru_q = new LRUQueue();
-  ImageCacheEntries *imageCacheEntry = new ImageCacheEntries();
+  lru_queue = new LRUQueue();
+  cache_entries = new ImageCacheEntries();
+	cache_entries->reserve(HASH_SIZE);
   
-  
 
-  imageCacheEntry.insert(std::make_pair<uint64_t, ceph::bufferlist *>(be, bl));
 
-  // //arbitrary size 26, could be any size
-  // deque<char> deque1(26, '0');
-
-  // deque<char>::iterator i;
-
-  // //populates the deque with 26 elements. 
-  //   for (i = deque1.begin(); i != deque1.end(); ++i)
-  //   cout << *i << endl;
-*/
   on_finish->complete(0);
 
 	// init() called where? which context to use for on_finish?
@@ -216,24 +197,21 @@ template <typename I>
 void PrefetchImageCache<I>::shut_down(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << dendl;
-/*
+
 	//erases the content of the LRU queue
 	//since the content are ints, there's no need for deallocation
 	//by using the erase-remove idiom
-	lru_q -> erase(std::remove_if(lru_q->begin(), lru_q->end(), true), lru_q->end());
+	//lru_queue -> erase(std::remove_if(lru_queue->begin(), lru_queue->end(), true), lru_queue->end());
 
 	//calls the destructor which therefore destroys the object, not just only the reference to the object. 
-	lru_q -> clear();
+	lru_queue -> clear();
 
 	
 	// erases the content of the hash table
 
-	//pointer to a hash table
-	ImageCacheEntries *cache_entries;
-
  	// the hash table container, along with the objects in it
 	delete cache_entries;
-		*/				
+						
 	}
 	
 	
