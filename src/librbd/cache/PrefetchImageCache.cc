@@ -51,7 +51,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
                  << "on_finish=" << on_finish << dendl;
 
 	//get the extents, then call the splitting/chunking function from @Leo's code
-
+  PrefetchImageCache<I>::extent_to_chunks(image_extents);
 	//begin read from cache
   
   // writeback's aio_read method used for reading from cluster
@@ -96,13 +96,21 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(Extents image_extent
   if (offset%CACHE_CHUNK_SIZE != 0) {
     chunkedExtent[0].first = offset-offset%CACHE_CHUNK_SIZE;
   }
-  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {
+
+  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {                   
     itr++;
-  } else if ((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE) {
-    chunkedExtent[0].second = (length+CACHE_CHUNK_SIZE-(offset+(length%CACHE_CHUNK_SIZE))) + length;
-  } else {
-      chunkedExtent[0].first = offset;
-      chunkedExtent[0].second = length;
+
+    uint64_t remains2 = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;
+    chunkedExtent[0].second = length + remains2;
+
+  } else if((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE){
+
+    uint64_t remains = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;
+    chunkedExtent[0].second = length+remains;
+
+  }else{
+    chunkedExtent[0].first = offset;
+    chunkedExtent[0].second = length;
   }
 
   return chunkedExtent;
