@@ -62,11 +62,6 @@ private:
   // queue for handling LRU eviction 
   typedef std::deque<uint64_t> LRUQueue;
   LRUQueue *lru_queue;
-  
-
-
-
-  
 
   Extents extent_to_chunks(Extents image_extents); 
 	Extents_vec * extents_list;
