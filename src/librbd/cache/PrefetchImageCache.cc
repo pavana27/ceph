@@ -58,17 +58,18 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
 
 	ImageCacheEntries temp; 
-	//checks to see if cache is empty
+	//checks to see if cache -is**** ISN'T empty ---- but this still is completely wrong and also it segfaults immediately
 	//if it is, read chunks,
 	//copying the hash table of cache to a temporary hash table.
 	//else read from cluster
-	if(!(cache_entries->empty())){
+//	if(!(cache_entries->empty())){
 		temp = *cache_entries;
 	//else read from cluster
-	}	else{
+//	}	else{
   // writeback's aio_read method used for reading from cluster
 		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
-	}
+//	}
+
 	//call chunking/splitting function again from @Leo's code
 	
 //	}
@@ -186,8 +187,13 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   //begin initializing LRU and hash table.
   lru_queue = new LRUQueue();
   cache_entries = new ImageCacheEntries();
-	cache_entries->reserve(HASH_SIZE);
   
+
+
+
+  cache_entries->reserve(HASH_SIZE);
+  
+
 
 
   on_finish->complete(0);
