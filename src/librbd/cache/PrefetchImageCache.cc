@@ -56,6 +56,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 	std::set<uint64_t> set_tracker;
 
 	//get the extents, then call the splitting/chunking function from @Leo's code
+	//<<<<<<< HEAD
 	std::vector<Extents> temp;
 	for(auto &it : image_extents){
 		temp.push_back(extent_to_chunks(it));
@@ -100,6 +101,30 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   // writeback's aio_read method used for reading from cluster
 		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
 
+		//  PrefetchImageCache<I>::extent_to_chunks(image_extents[0]);
+	//begin read from cache
+  
+  // writeback's aio_read method used for reading from cluster
+	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
+
+	//ImageCacheEntries temp; 
+	//checks to see if cache -is**** ISN'T empty ---- but this still is completely wrong and also it segfaults immediately
+	//if it is, read chunks,
+	//copying the hash table of cache to a temporary hash table.
+	//else read from cluster
+//	if(!(cache_entries->empty())){
+	//	temp = *cache_entries;
+	//else read from cluster
+//	}	else{
+  // writeback's aio_read method used for reading from cluster
+		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
+//	}
+
+	//call chunking/splitting function again from @Leo's code
+	
+//	}
+//>>>>>>> 49909ce003100b37fae85d33e55341e46736f4ac
+
 
 	}
 	//call chunking/splitting function again from @Leo's code after reading from cluster
@@ -107,6 +132,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 }
 
 template <typename I>
+//<<<<<<< HEAD
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {                                                       
                                                                                                                                                               
   uint64_t size;                                                                                                                                              
@@ -150,6 +176,7 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
   return chunkedExtent;                                                                                                                                       
                                                                                                                                                               
 }
+
   
 template <typename I>
 void PrefetchImageCache<I>::aio_write(Extents &&image_extents,
@@ -221,8 +248,13 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   //begin initializing LRU and hash table.
   lru_queue = new LRUQueue();
   cache_entries = new ImageCacheEntries();
-	cache_entries->reserve(HASH_SIZE);
   
+
+
+
+  cache_entries->reserve(HASH_SIZE);
+  
+
 
 
   on_finish->complete(0);
