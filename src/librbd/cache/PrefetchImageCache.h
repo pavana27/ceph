@@ -64,6 +64,7 @@ private:
   LRUQueue *lru_queue;
 
   Extents extent_to_chunks(Extents image_extents); 
+  //chunking data structure
 	Extents_vec * extents_list;
 
 };
