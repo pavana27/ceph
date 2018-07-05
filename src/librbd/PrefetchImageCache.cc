@@ -1,6 +1,6 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
-
+//testing this is Tommy writing a simple comment
 #include "PrefetchImageCache.h"
 #include "include/buffer.h"
 #include "common/dout.h"
@@ -49,79 +49,75 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
-
+  std::vector<Extents> 
+  for(auto it: image_extents){
+    Extents image_extents2 = extent_to_chunks(it);
+    
+  }
 	//get the extents, then call the splitting/chunking function from @Leo's code
-  PrefetchImageCache<I>::extent_to_chunks(image_extents[0]);
+  Extents image_extents2 = extent_to_chunks(image_extents);
 	//begin read from cache
-  
-  // writeback's aio_read method used for reading from cluster
-	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
+  //	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = imageCacheEntry->begin();
 
-	//ImageCacheEntries temp; 
-	//checks to see if cache -is**** ISN'T empty ---- but this still is completely wrong and also it segfaults immediately
-	//if it is, read chunks,
-	//copying the hash table of cache to a temporary hash table.
-	//else read from cluster
-//	if(!(cache_entries->empty())){
-	//	temp = *cache_entries;
-	//else read from cluster
-//	}	else{
-  // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
-//	}
+  	ImageCacheEntries temp; 
+	//checks to see if cache is empty
+	//if it is, read chunks,	//else read from cluster
+	if(!(imageCacheEntry->empty()){
+	//iterate over the hash table
+	for(auto it: *imageCacheEntry){
 
+		//right now, I have it set so that whatever chunk data we get, it is stored in a temp hash table with the same type as the cache type.
+		//i don't know how to make this into a "reassembly" buffer...
+		/****************** PROBABLY USING the @param bufferlist *bl? **********************/
+				temp.insert(std::make_pair(it.first, it.second));
+			 }
+		}
+	//else read from cluster
+	else{
+  // writeback's aio_read method used for reading from cluster
+		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);           //do we assume that it's already in the (read) bufferlist 
+	
 	//call chunking/splitting function again from @Leo's code
 	
-//	}
+	}
+
+	  
 
 
 }
 
 template <typename I>
-ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {
-  
-  uint64_t size;
+ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(Extents image_extents) {
 
   Extents::iterator itr;
   Extents::iterator itrD;
+
+  itr = image_extents.begin();
   Extents chunkedExtent;
-  uint64_t changedOffset;
-  uint64_t changedLength;
-  uint64_t offset = one_extent.first;
-  uint64_t length = one_extent.second;
-  uint64_t remainingLength;
-  uint64_t deficit;
+
+  chunkedExtent.push_back(std::make_pair(itr->first,itr->second));
+
+  chunkedExtent.insert(chunkedExtent.begin() + 1, std::make_pair(itr->first,itr->second));
+  itrD = chunkedExtent.begin();
+
+  uint64_t offset = itr->first;
+  uint64_t length = itr->second;
 
   if (offset%CACHE_CHUNK_SIZE != 0) {
-    changedOffset = offset-offset%CACHE_CHUNK_SIZE;             //This changes the current offset
-    chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));
+    chunkedExtent[0].first = offset-offset%CACHE_CHUNK_SIZE;
   }
-  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {                    //Checks if the length is
-    uint64_t remains2 = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;
-    changedLength = length + remains2;
-  } else if((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE){
+  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {
+    itr++;
+  } else if ((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE) {
     uint64_t remains = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;
-    changedLength = length+remains;
-  }else{
-    changedOffset = offset;
-    changedLength = length;
-  }
-  if (changedLength > CACHE_CHUNK_SIZE) {
-    while (changedLength > CACHE_CHUNK_SIZE) {
-
-      remainingLength = changedLength - CACHE_CHUNK_SIZE;
-      changedOffset += CACHE_CHUNK_SIZE;
-      changedLength -= CACHE_CHUNK_SIZE;
-      //cout << "printing" << changedOffset << endl;
-      chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));
-    }
+    chunkedExtent[0].second = length+remains;
   } else {
-    chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));
-  }
-  return chunkedExtent;
-  
+      chunkedExtent[0].first = offset;
+      chunkedExtent[0].second = length;
   }
 
+  return chunkedExtent;
+}
   
 template <typename I>
 void PrefetchImageCache<I>::aio_write(Extents &&image_extents,
@@ -190,18 +186,37 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;    //for logging purposes
   ldout(cct, 20) << dendl;
 
+  //iterates through the bufferlist -- though it might not be needed
+  ceph::bufferlist::const_iterator me = begin();
+      while (!me.end()) {
+	++me;
+      }
+
+      //just wants to see the result of the bufferlist
+  for (auto const &pair: ImageCacheEntries)
+	  std::cout << "{" << pair.first << " -> " << pair.second << "}\n";
+
+  ceph::bufferlist * bl;
+  uint64_t be;
+
   //begin initializing LRU and hash table.
-  lru_queue = new LRUQueue();
-  cache_entries = new ImageCacheEntries();
+  LRUQueue *lru_q = new LRUQueue();
+  ImageCacheEntries *imageCacheEntry = new ImageCacheEntries();
+  
   
 
+  ImageCacheEntry.insert(std::make_pair<uint64_t, ceph::bufferlist *>(be, bl));
 
+  // //arbitrary size 26, could be any size
+  // deque<char> deque1(26, '0');
 
-  cache_entries->reserve(HASH_SIZE);
-  
+  // deque<char>::iterator i;
 
+  // //populates the deque with 26 elements. 
+  //   for (i = deque1.begin(); i != deque1.end(); ++i)
+  //   cout << *i << endl;
 
-
+  //don't know how to implement on_finish
   on_finish->complete(0);
 
 	// init() called where? which context to use for on_finish?
@@ -218,19 +233,26 @@ void PrefetchImageCache<I>::shut_down(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << dendl;
 
+  /*
+
 	//erases the content of the LRU queue
 	//since the content are ints, there's no need for deallocation
 	//by using the erase-remove idiom
-	//lru_queue -> erase(std::remove_if(lru_queue->begin(), lru_queue->end(), true), lru_queue->end());
+	lru_q -> erase(std::remove_if(lru_q->begin(), lru_q->end(), true), lru_q->end());
 
 	//calls the destructor which therefore destroys the object, not just only the reference to the object. 
-	lru_queue -> clear();
+	lru_q -> clear();
 
 	
-	// erases the content of the hash table
+	 
+
+	//pointer to a hash table
+	ImageCacheEntries *cache_entries;
 
  	// the hash table container, along with the objects in it
 	delete cache_entries;
+
+	*/
 						
 	}
 	
