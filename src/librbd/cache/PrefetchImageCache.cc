@@ -57,13 +57,13 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   // writeback's aio_read method used for reading from cluster
 	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
 
-	ImageCacheEntries temp; 
+	//ImageCacheEntries temp; 
 	//checks to see if cache -is**** ISN'T empty ---- but this still is completely wrong and also it segfaults immediately
 	//if it is, read chunks,
 	//copying the hash table of cache to a temporary hash table.
 	//else read from cluster
 //	if(!(cache_entries->empty())){
-		temp = *cache_entries;
+	//	temp = *cache_entries;
 	//else read from cluster
 //	}	else{
   // writeback's aio_read method used for reading from cluster
