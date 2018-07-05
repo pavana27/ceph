@@ -63,12 +63,12 @@ private:
   typedef std::deque<uint64_t> LRUQueue;
   LRUQueue *lru_queue;
 
-  Extents extent_to_chunks(Extents image_extents); 
+  Extents extent_to_chunks(std::pair<uint64_t, uint64_t> image_extents); 
   //chunking data structure
   typedef std::vector< std::pair<uint64_t,uint64_t> > chunkedEntry;
-  //not sure if pointer is needed here...
-	typedef std::vector<Extents> Extents_vec;
-	Extents_vec * extents_list;
+  
+	chunkedEntry * chunkedExtent;
+	
 
 };
 

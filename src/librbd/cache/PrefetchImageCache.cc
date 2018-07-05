@@ -5,6 +5,7 @@
 #include "include/buffer.h"
 #include "common/dout.h"
 #include "librbd/ImageCtx.h"
+#include <algorithm>
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -50,62 +51,104 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
 
-	//get the extents, then call the splitting/chunking function from @Leo's code
+	
+	std::vector<Extents> unique_list_of_extents;
+	std::set<uint64_t> set_tracker;
 
+	//get the extents, then call the splitting/chunking function from @Leo's code
+	std::vector<Extents> temp;
+	for(auto &it : image_extents){
+		temp.push_back(extent_to_chunks(it));
+	}
+
+	//loops through the row
+	for ( const auto &row : temp)
+    {
+			//temp list of extent
+			Extents fogRow;
+			//loops through the column
+			for ( const auto &s : row )
+        {
+					//inserts into a set and checks to see if the element is already inserted
+					auto ret = set_tracker.insert(s.first);
+					//if inserted, insert into the vector of list
+					if (ret.second==true)
+            fogRow.push_back(s);
+
+        }
+			//inserts the fogRow temp vector into the vector of vector of extents.
+			unique_list_of_extents.push_back(fogRow);
+    }
+				
+	
 	//begin read from cache
   
-  // writeback's aio_read method used for reading from cluster
-	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
-
-	ImageCacheEntries temp; 
+	ImageCacheEntries tempHash; 
 	//checks to see if cache is empty
 	//if it is, read chunks,
 	//copying the hash table of cache to a temporary hash table.
 	//else read from cluster
 	if(!(cache_entries->empty())){
-		temp = *cache_entries;
+                                
+		tempHash = *cache_entries;
+
 	//else read from cluster
+
 	}	else{
+
+
   // writeback's aio_read method used for reading from cluster
 		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
-	}
-	//call chunking/splitting function again from @Leo's code
-	
-//	}
 
+
+	}
+	//call chunking/splitting function again from @Leo's code after reading from cluster
 
 }
 
 template <typename I>
-ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(Extents image_extents) {
-
-  Extents::iterator itr;
-  Extents::iterator itrD;
-
-  itr = image_extents.begin();
-  Extents chunkedExtent;
-
-  chunkedExtent.push_back(std::make_pair(itr->first,itr->second));
-
-  chunkedExtent.insert(chunkedExtent.begin() + 1, std::make_pair(itr->first,itr->second));
-  itrD = chunkedExtent.begin();
-
-  uint64_t offset = itr->first;
-  uint64_t length = itr->second;
-
-  if (offset%CACHE_CHUNK_SIZE != 0) {
-    chunkedExtent[0].first = offset-offset%CACHE_CHUNK_SIZE;
-  }
-  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {
-    itr++;
-  } else if ((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE) {
-    chunkedExtent[0].second = (length+CACHE_CHUNK_SIZE-(offset+(length%CACHE_CHUNK_SIZE))) + length;
-  } else {
-      chunkedExtent[0].first = offset;
-      chunkedExtent[0].second = length;
-  }
-
-  return chunkedExtent;
+ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {                                                       
+                                                                                                                                                              
+  uint64_t size;                                                                                                                                              
+                                                                                                                                                              
+	Extents::iterator itr;                                                                                                                                      
+	Extents::iterator itrD;                                                                                                                                     
+  Extents chunkedExtent;                                                                                                                                      
+  uint64_t changedOffset;                                                                                                                                     
+  uint64_t changedLength;                                                                                                                                     
+  uint64_t offset = one_extent.first;                                                                                                                         
+  uint64_t length = one_extent.second;                                                                                                                        
+  uint64_t remainingLength;                                                                                                                                   
+  uint64_t deficit;                                                                                                                                           
+                                                                                                                                                              
+  if (offset%CACHE_CHUNK_SIZE != 0) {                                                                                                                         
+    changedOffset = offset-offset%CACHE_CHUNK_SIZE;             //This changes the current offset                                                             
+    chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));                                                                                  
+  }                                                                                                                                                           
+  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {                    //Checks if the length is                                                   
+    uint64_t remains2 = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;                                                                                           
+    changedLength = length + remains2;                                                                                                                        
+  } else if((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE){                                                                                           
+    uint64_t remains = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;                                                                                            
+    changedLength = length+remains;                                                                                                                           
+  }else{                                                                                                                                                      
+    changedOffset = offset;                                                                                                                                   
+    changedLength = length;                                                                                                                                   
+  }                                                                                                                                                           
+  if (changedLength > CACHE_CHUNK_SIZE) {                                                                                                                     
+    while (changedLength > CACHE_CHUNK_SIZE) {                                                                                                                
+                                                                                                                                                              
+      remainingLength = changedLength - CACHE_CHUNK_SIZE;                                                                                                     
+      changedOffset += CACHE_CHUNK_SIZE;                                                                                                                      
+      changedLength -= CACHE_CHUNK_SIZE; 
+			//cout << "printing" << changedOffset << endl;                                                                                                          
+      chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));                                                                                
+    }                                                                                                                                                         
+  } else {                                                                                                                                                    
+    chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));                                                                                  
+  }                                                                                                                                                           
+  return chunkedExtent;                                                                                                                                       
+                                                                                                                                                              
 }
   
 template <typename I>
