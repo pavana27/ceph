@@ -223,7 +223,7 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   //begin initializing LRU and hash table.
   lru_queue = new LRUQueue();
   cache_entries = new ImageCacheEntries();
-	cache_entries->reserve(HASH_SIZE);
+  cache_entries->reserve(HASH_SIZE);
   
 
 
@@ -235,6 +235,18 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
 	// using librbd, so lifecycle is not quite the same as the actual open image connection
 
 	// see librbd/Utils.h line 132 for create_context_callback which seems to be the kind of context that's needed for on_finish
+}
+
+template <typename I>
+void PrefetchImageCache<I>::init_blocking() {
+  CephContext *cct = m_image_ctx.cct;    //for logging purposes
+  ldout(cct, 20) << "BLOCKING init without callback, being called from image cache constructor" << dendl;
+
+  //begin initializing LRU and hash table.
+  lru_queue = new LRUQueue();
+  cache_entries = new ImageCacheEntries();
+  cache_entries->reserve(HASH_SIZE);
+  
 }
 	
 	

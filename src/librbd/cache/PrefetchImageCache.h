@@ -44,6 +44,7 @@ public:
 
   /// internal state methods
   void init(Context *on_finish) override;
+  void init_blocking() override;
   void shut_down(Context *on_finish) override;
 
   void invalidate(Context *on_finish) override;

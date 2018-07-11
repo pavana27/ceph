@@ -152,6 +152,7 @@ public:
     journal_policy = new journal::StandardPolicy<ImageCtx>(this);
 
     image_cache = new cache::PrefetchImageCache<ImageCtx>(*this);
+    image_cache->init_blocking(); // BLOCKING, TODO: put this somewhere else so it doesn't need to block
   }
 
   ImageCtx::~ImageCtx() {

@@ -42,6 +42,7 @@ struct ImageCache {
 
   /// internal state methods
   virtual void init(Context *on_finish) = 0;
+  virtual void init_blocking() = 0;
   virtual void shut_down(Context *on_finish) = 0;
 
   virtual void invalidate(Context *on_finish) = 0;
