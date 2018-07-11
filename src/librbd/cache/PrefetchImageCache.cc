@@ -5,7 +5,7 @@
 #include "include/buffer.h"
 #include "common/dout.h"
 #include "librbd/ImageCtx.h"
-#include <algorithm>
+//#include <algorithm>
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -62,6 +62,9 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 		temp.push_back(extent_to_chunks(it));
 	}
 
+	ldout(cct,20) << "\"temp\" after all extents chunked: " 
+		      << temp << dendl;
+
 	//loops through the row
 	for ( const auto &row : temp)
     {
@@ -111,7 +114,7 @@ template <typename I>
 
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {                                                       
                                                                                                                                                               
-  uint64_t size;                                                                                                                                              
+  CephContext *cct = m_image_ctx.cct;
                                                                                                                                                               
 	Extents::iterator itr;                                                                                                                                      
 	Extents::iterator itrD;                                                                                                                                     
@@ -120,13 +123,13 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
   uint64_t changedLength;                                                                                                                                     
   uint64_t offset = one_extent.first;                                                                                                                         
   uint64_t length = one_extent.second;                                                                                                                        
-  uint64_t remainingLength;                                                                                                                                   
-  uint64_t deficit;                                                                                                                                           
                                                                                                                                                               
   if (offset%CACHE_CHUNK_SIZE != 0) {                                                                                                                         
     changedOffset = offset-offset%CACHE_CHUNK_SIZE;             //This changes the current offset                                                             
     chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));                                                                                  
   }                                                                                                                                                           
+
+
   if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {                    //Checks if the length is                                                   
     uint64_t remains2 = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;                                                                                           
     changedLength = length + remains2;                                                                                                                        
@@ -137,10 +140,11 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
     changedOffset = offset;                                                                                                                                   
     changedLength = length;                                                                                                                                   
   }                                                                                                                                                           
+
+  ldout(cct,20) << "changedLength=" << changedLength << ", changedOffset=" << changedOffset << dendl;
   if (changedLength > CACHE_CHUNK_SIZE) {                                                                                                                     
     while (changedLength > CACHE_CHUNK_SIZE) {                                                                                                                
                                                                                                                                                               
-      remainingLength = changedLength - CACHE_CHUNK_SIZE;                                                                                                     
       changedOffset += CACHE_CHUNK_SIZE;                                                                                                                      
       changedLength -= CACHE_CHUNK_SIZE; 
 			//cout << "printing" << changedOffset << endl;                                                                                                          
