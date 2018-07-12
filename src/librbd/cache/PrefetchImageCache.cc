@@ -102,10 +102,6 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 	std::vector<Extents> unique_list_of_extents;
 	std::set<uint64_t> set_tracker;
 
-	
-	std::vector<Extents> unique_list_of_extents;
-	std::set<uint64_t> set_tracker;
-
 	//get the extents, then call the splitting/chunking function from @Leo's code
 	std::vector<Extents> temp;
 	for(auto &it : image_extents){
