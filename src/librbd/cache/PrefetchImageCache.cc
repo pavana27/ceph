@@ -35,12 +35,7 @@ PrefetchImageCache<I>::PrefetchImageCache(ImageCtx &image_ctx)
  *    then we copy that back into the read bufferlist
  *  if it's not in the cache, 
  *    do that read from m_image_writeback, that should put it into the read bufferlist (???) 
- *    then can we also get it and put it in the cache??? somehow this needs to happen
- *    
- *  
- *  
- *  
- *  
+ *    then we also put it in the cache - somehow this needs to happen
 */  
 
 
@@ -50,46 +45,47 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
-   bufferlist::iterator itr;
 
-	std::vector<Extents> unique_list_of_extents;
-	std::set<uint64_t> set_tracker;
+  bufferlist::iterator itr;
+  std::vector<Extents> unique_list_of_extents;
+  std::set<uint64_t> set_tracker;
 
-	//get the extents, then call the splitting/chunking function from @Leo's code
-	std::vector<Extents> temp;
-	for(auto &it : image_extents){
-		temp.push_back(extent_to_chunks(it));
-	}
+  //get the extents, then call the chunking function
+  std::vector<Extents> temp;
+  for(auto &it : image_extents) {
+    temp.push_back(extent_to_chunks(it));
+  }
 
-	ldout(cct,20) << "\"temp\" after all extents chunked: " 
-		      << temp << dendl;
+  ldout(cct, 20) << "\"temp\" after all extents chunked: " 
+		 << temp << dendl;
 
-	//loops through the row
-	for ( const auto &row : temp)
-    {
-			//temp list of extent
-			Extents fogRow;
-			//loops through the column
-			for ( const auto &s : row )
-        {
-					//inserts into a set and checks to see if the element is already inserted
-					auto ret = set_tracker.insert(s.first);
-					//if inserted, insert into the vector of list
-					if (ret.second==true)
-            fogRow.push_back(s);
+  //loops through the row
+  for (const auto &row : temp) {
 
-        }
-			//inserts the fogRow temp vector into the vector of vector of extents.
-			unique_list_of_extents.push_back(fogRow);
+    //temp list of extent
+    Extents fogRow;
+
+    //loops through the column
+    for (const auto &s : row) {
+      //inserts into a set and checks to see if the element is already inserted
+      auto ret = set_tracker.insert(s.first);
+      //if inserted, insert into the vector of list
+      if (ret.second==true) {
+        fogRow.push_back(s);
+      }
     }
-	       // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
+    unique_list_of_extents.push_back(fogRow);
 
-	bufferlist newbl;
-	bufferlist::iterator it_bl = bl->begin();
-	bufferlist::iterator it_newbl = newbl.begin();
-	it_newbl.copy_in(12345,'x');
-	it_bl.get_off();
+  }
+
+  // writeback's aio_read method used for reading from cluster
+  m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
+
+  bufferlist newbl;
+  bufferlist::iterator it_bl = bl->begin();
+  bufferlist::iterator it_newbl = newbl.begin();
+  it_newbl.copy_in(12345,'x');
+  it_bl.get_off();
 }
 
 template <typename I>
