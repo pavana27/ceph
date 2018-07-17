@@ -82,31 +82,9 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 			//inserts the fogRow temp vector into the vector of vector of extents.
 			unique_list_of_extents.push_back(fogRow);
     }
-				
-	
-	//begin read from cache
-  
-	ImageCacheEntries tempHash; 
-	//checks to see if cache is empty
-	//if it is, read chunks,
-	//copying the hash table of cache to a temporary hash table.
-	//else read from cluster
-	if(!(cache_entries->empty())){
-                                
-		tempHash = *cache_entries;
+	       // writeback's aio_read method used for reading from cluster
+		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
 
-	//else read from cluster
-
-	}	else{
-
-
-	        // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
-
-	}
-	//call chunking/splitting function again from @Leo's code after reading from cluster
-
-	
 	bufferlist newbl;
 	bufferlist::iterator it_bl = bl->begin();
 	bufferlist::iterator it_newbl = newbl.begin();
