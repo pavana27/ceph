@@ -56,7 +56,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     temp.push_back(extent_to_chunks(it));
   }
 
-  ldout(cct, 20) << "\"temp\" after all extents chunked: " 
+  ldout(cct, 25) << "\"temp\" after all extents chunked: " 
 		 << temp << dendl;
 
   //loops through the row
@@ -75,8 +75,9 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
       }
     }
     unique_list_of_extents.push_back(fogRow);
-
   }
+
+  ldout(cct, 20) << "extents chunked and deduped: " << unique_list_of_extents << dendl;
 
   // writeback's aio_read method used for reading from cluster
   m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
@@ -92,7 +93,6 @@ template <typename I>
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {                                                       
                                                                                                                                                               
   uint64_t size;                                                                                                                                              
-                                                                                                                                                              
 	Extents::iterator itr;                                                                                                                                      
 	Extents::iterator itrD;                                                                                                                                     
   Extents chunkedExtent;                                                                                                                                      
@@ -122,7 +122,6 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
   }                                                                                                                                                           
   if (changedLength > CACHE_CHUNK_SIZE) {                                                                                                                     
     while (changedLength > CACHE_CHUNK_SIZE) {                                                                                                                
-                                                                                                                                                              
       remainingLength = changedLength - CACHE_CHUNK_SIZE;                                                                                                     
       changedOffset += CACHE_CHUNK_SIZE;                                                                                                                      
       changedLength -= CACHE_CHUNK_SIZE; 
