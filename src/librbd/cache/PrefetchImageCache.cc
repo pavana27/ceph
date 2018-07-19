@@ -92,7 +92,6 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 template <typename I>
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {
 
-  uint64_t size;
 	Extents::iterator itr;         
 	Extents::iterator itrD;
   Extents chunkedExtent;
@@ -100,8 +99,6 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
   uint64_t changedLength;
   uint64_t offset = one_extent.first;
   uint64_t length = one_extent.second;
-  uint64_t remainingLength;
-  uint64_t deficit;
  
   if (offset%CACHE_CHUNK_SIZE != 0) {
     changedOffset = offset-offset%CACHE_CHUNK_SIZE;             //This changes the current offset
@@ -122,7 +119,6 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
   }
   if (changedLength > CACHE_CHUNK_SIZE) {
     while (changedLength > CACHE_CHUNK_SIZE) {
-      remainingLength = changedLength - CACHE_CHUNK_SIZE;
       changedOffset += CACHE_CHUNK_SIZE;
       changedLength -= CACHE_CHUNK_SIZE;
 			//cout << "printing" << changedOffset << endl;
