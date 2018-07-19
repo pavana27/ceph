@@ -8,6 +8,7 @@
 
 #include "ImageCache.h"
 #include "ImageWriteback.h"
+#include "include/Context.h"
 #include <deque>
 #include <unordered_map>
 
@@ -24,6 +25,18 @@ namespace cache {
 template <typename ImageCtxT = librbd::ImageCtx>
 class PrefetchImageCache : public ImageCache {
 public:
+  struct C_CacheChunkRequest : public Context {
+    librbd::io::AioCompletion *aio_completion;
+    Extents image_extents;
+    bufferlist bl;
+
+    explicit C_CacheChunkRequest(io::AioCompletion *aio_completion,
+                       const Extents image_extents);
+
+    void finish(int r) override;
+  };
+
+
   explicit PrefetchImageCache(ImageCtx &image_ctx);
 
   /// client AIO methods

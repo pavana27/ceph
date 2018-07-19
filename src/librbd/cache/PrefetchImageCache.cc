@@ -1,10 +1,12 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
 
-#include "PrefetchImageCache.h"
 #include "include/buffer.h"
 #include "common/dout.h"
 #include "librbd/ImageCtx.h"
+#include "librbd/io/ReadResult.h"
+#include "librbd/io/AioCompletion.h"
+#include "PrefetchImageCache.h"
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -269,6 +271,14 @@ void PrefetchImageCache<I>::flush(Context *on_finish) {
   // in-flight IO is flushed
   aio_flush(on_finish);
 }
+
+template <typename I>
+PrefetchImageCache<I>::C_CacheChunkRequest::C_CacheChunkRequest(io::AioCompletion *aio_completion,
+   const Extents image_extents) 
+ : aio_completion(aio_completion), image_extents(image_extents) { 
+  
+}
+
 
 } // namespace cache
 } // namespace librbd
