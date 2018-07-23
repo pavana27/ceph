@@ -235,7 +235,7 @@ template <typename I>
 void ImageReadRequest<I>::send_image_cache_request() {
   I &image_ctx = this->m_image_ctx;
   assert(image_ctx.image_cache != nullptr);
-  ldout(image_ctx.cct, 10) << "inside cache request " << dendl;
+  ldout(image_ctx.cct, 25) << "inside cache request " << dendl;
 
   AioCompletion *aio_comp = this->m_aio_comp;
   aio_comp->set_request_count(1);
