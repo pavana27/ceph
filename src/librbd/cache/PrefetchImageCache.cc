@@ -1,11 +1,14 @@
+
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
-// vim: ts=8 sw=2 smarttab
+//1;95;0c/ vim: ts=8 sw=2 smarttab
 
 #include "PrefetchImageCache.h"
 #include "include/buffer.h"
 #include "common/dout.h"
 #include "librbd/ImageCtx.h"
 #include <algorithm>
+#include <unordered_map>
+
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -45,12 +48,11 @@ PrefetchImageCache<I>::PrefetchImageCache(ImageCtx &image_ctx)
 */  
 
 template <typename I>
-void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
-                                        int fadvise_flags, Context *on_finish) {
+void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,int fadvise_flags, Context *on_finish) {
+
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
-
 	
 	std::vector<Extents> unique_list_of_extents;
 	std::set<uint64_t> set_tracker;
@@ -62,88 +64,53 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 		temp.push_back(extent_to_chunks(it));
 	}
 
-	//loops through the row
 	for ( const auto &row : temp)
-    {
-			//temp list of extent
-			Extents fogRow;
-			//loops through the column
-			for ( const auto &s : row )
-        {
-					//inserts into a set and checks to see if the element is already inserted
-					auto ret = set_tracker.insert(s.first);
-					//if inserted, insert into the vector of list
-					if (ret.second==true)
-            fogRow.push_back(s);
-
-        }
-			//inserts the fogRow temp vector into the vector of vector of extents.
-			unique_list_of_extents.push_back(fogRow);
-    }
-				
-	
-	//begin read from cache
+	{
+	  Extents fogRow;
+	  for ( const auto &s : row )
+	    {
+	      auto ret = set_tracker.insert(s.first);
+	      if (ret.second==true)
+		fogRow.push_back(s);
+	    }
+	  unique_list_of_extents.push_back(fogRow);
+	}
   
 	ImageCacheEntries tempHash; 
-	//checks to see if cache is empty
-	//if it is, read chunks,
-	//copying the hash table of cache to a temporary hash table.
-	//else read from cluster
-	if(!(cache_entries->empty())){
-                                
-		tempHash = *cache_entries;
-
-	//else read from cluster
-
-	}	else{
+	m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) buf
 
 
-  // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
 
-		//  PrefetchImageCache<I>::extent_to_chunks(image_extents[0]);
-	//begin read from cache
-  
-  // writeback's aio_read method used for reading from cluster
-	//	std::unordered_map<uint64_t, ceph::bufferlist *>::iterator it = cache_entries->begin();
+	                                                                                                                                                                                                                  
+	  for(std::vector<Extents>::const_iterator row = unique_list_of_extents.begin(); row != unique_list_of_extents.end(); ++row){                                               for(Extents::const_iterator col = row->begin(); col != row->end(); ++col){
+	      ImageCacheEntries::const_iterator element = cache_entries->find((*col).first);   
+	      if(element == cache_entries->end()){
+		//Read from cluster
 
-	//ImageCacheEntries temp; 
-	//checks to see if cache -is**** ISN'T empty ---- but this still is completely wrong and also it segfaults immediately
-	//if it is, read chunks,
-	//copying the hash table of cache to a temporary hash table.
-	//else read from cluster
-//	if(!(cache_entries->empty())){
-	//	temp = *cache_entries;
-	//else read from cluster
-//	}	else{
-  // writeback's aio_read method used for reading from cluster
-		m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);                //do we assume that it's already in the (read) bufferlist 
-//	}
+		//temporary bufferlist to get the data.
+		bufferlist *cache_bl;
+		m_image_writeback.aio_read(std::move(image_extents), cache_bl, fadvise_flags, on_finish);
+		std::pair<uint64_t, bufferlist*> insert_element(element->first,cache_bl);
+		cache_entries->insert(insert_element);
+		//reading the data from the cache
+		element->second->copy(element->first,CACHE_CHUNK_SIZE,*bl);
+	      }else{
+		element->second->copy(element->first,CACHE_CHUNK_SIZE,*bl);
+	      }
+	    }
+	  }
 
-	//call chunking/splitting function again from @Leo's code
 	
-//	}
-//>>>>>>> 49909ce003100b37fae85d33e55341e46736f4ac
 
-
-	}
-	//call chunking/splitting function again from @Leo's code after reading from cluster
-	
-	bufferlist newbl;
-	bufferlist::iterator it_bl = bl->begin();
-	bufferlist::iterator it_newbl = newbl.begin();
-	it_newbl.copy_in(12345,'x');
-	it_bl.get_off();
 }
+
 
 template <typename I>
 //<<<<<<< HEAD
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {                                                       
-                                                                                                                                                              
-  uint64_t size;                                                                                                                                              
-                                                                                                                                                              
-	Extents::iterator itr;                                                                                                                                      
-	Extents::iterator itrD;                                                                                                                                     
+
+  uint64_t size;                                                                                                                                                                                                     Extents::iterator itr;                                                                                                                                      
+  Extents::iterator itrD;                                                                                                                                     
   Extents chunkedExtent;                                                                                                                                      
   uint64_t changedOffset;                                                                                                                                     
   uint64_t changedLength;                                                                                                                                     
@@ -182,7 +149,7 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
     chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));                                                                                  
   }                                                                                                                                                           
   return chunkedExtent;                                                                                                                                       
-                                                                                                                                                              
+
 }
 
   
