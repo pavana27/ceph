@@ -58,8 +58,8 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     temp.push_back(extent_to_chunks(it));
   }
 
-  ldout(cct, 25) << "\"temp\" after all extents chunked: " 
-		 << temp << dendl;
+  ldout(cct, 25) << "\"temp\" after all extents chunked: "
+     << temp << dendl;
 
   //loops through the row
   for (const auto &row : temp) {
@@ -94,8 +94,8 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 template <typename I>
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {
 
-	Extents::iterator itr;         
-	Extents::iterator itrD;
+  Extents::iterator itr;         
+  Extents::iterator itrD;
   Extents chunkedExtent;
   uint64_t changedOffset;
   uint64_t changedLength;
@@ -103,19 +103,19 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
   uint64_t length = one_extent.second;
  
   if (offset%CACHE_CHUNK_SIZE != 0) {
-    changedOffset = offset-offset%CACHE_CHUNK_SIZE;             //This changes the current offset
+    changedOffset = offset-offset%CACHE_CHUNK_SIZE;
     chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));
   } else {
     changedOffset = offset;
     chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));
   }         
-  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {                    //Checks if the length is
+  if ((length%CACHE_CHUNK_SIZE + offset) < CACHE_CHUNK_SIZE) {
     uint64_t remains2 = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;
     changedLength = length + remains2;
   } else if((offset%CACHE_CHUNK_SIZE + length) > CACHE_CHUNK_SIZE){
     uint64_t remains = CACHE_CHUNK_SIZE - length%CACHE_CHUNK_SIZE;
     changedLength = length+remains;
-  }else{ 
+  } else { 
     changedOffset = offset;
     changedLength = length;
   }
@@ -123,7 +123,6 @@ ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, 
     while (changedLength > CACHE_CHUNK_SIZE) {
       changedOffset += CACHE_CHUNK_SIZE;
       changedLength -= CACHE_CHUNK_SIZE;
-			//cout << "printing" << changedOffset << endl;
       chunkedExtent.push_back(std::make_pair(changedOffset,CACHE_CHUNK_SIZE));
     }
   } else {
@@ -210,12 +209,12 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
 
   on_finish->complete(0);
 
-	// init() called where? which context to use for on_finish?
-	// in other implementations, init() is called in OpenRequest, totally unrelated
-	// to constructor, which makes sense - image context is 'owned' by program
-	// using librbd, so lifecycle is not quite the same as the actual open image connection
+  // init() called where? which context to use for on_finish?
+  // in other implementations, init() is called in OpenRequest, totally unrelated
+  // to constructor, which makes sense - image context is 'owned' by program
+  // using librbd, so lifecycle is not quite the same as the actual open image connection
 
-	// see librbd/Utils.h line 132 for create_context_callback which seems to be the kind of context that's needed for on_finish
+  // see librbd/Utils.h line 132 for create_context_callback which seems to be the kind of context that's needed for on_finish
 }
 
 template <typename I>
@@ -229,30 +228,30 @@ void PrefetchImageCache<I>::init_blocking() {
   cache_entries->reserve(HASH_SIZE);
   
 }
-	
-	
+  
+  
 template <typename I>
 void PrefetchImageCache<I>::shut_down(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;
   ldout(cct, 20) << dendl;
 
-	//erases the content of the LRU queue
-	//since the content are ints, there's no need for deallocation
-	//by using the erase-remove idiom
-	//lru_queue -> erase(std::remove_if(lru_queue->begin(), lru_queue->end(), true), lru_queue->end());
+  //erases the content of the LRU queue
+  //since the content are ints, there's no need for deallocation
+  //by using the erase-remove idiom
+  //lru_queue -> erase(std::remove_if(lru_queue->begin(), lru_queue->end(), true), lru_queue->end());
 
-	//calls the destructor which therefore destroys the object, not just only the reference to the object. 
-	lru_queue -> clear();
+  //calls the destructor which therefore destroys the object, not just only the reference to the object. 
+  lru_queue -> clear();
 
-	
-	// erases the content of the hash table
+  
+  // erases the content of the hash table
 
- 	// the hash table container, along with the objects in it
-	delete cache_entries;
-						
-	}
-	
-	
+  // the hash table container, along with the objects in it
+  delete cache_entries;
+            
+  }
+  
+  
 template <typename I>
 void PrefetchImageCache<I>::invalidate(Context *on_finish) {
   CephContext *cct = m_image_ctx.cct;

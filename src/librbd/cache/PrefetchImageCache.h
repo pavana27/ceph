@@ -82,9 +82,11 @@ private:
   typedef std::vector< std::pair<uint64_t,uint64_t> > chunkedEntry;
   
 	chunkedEntry * chunkedExtent;
-	
-
+  
+  
 };
+
+	
 
 } // namespace cache
 } // namespace librbd
