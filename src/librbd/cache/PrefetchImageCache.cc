@@ -81,14 +81,19 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 
   ldout(cct, 20) << "extents chunked and deduped: " << unique_list_of_extents << dendl;
 
-  // writeback's aio_read method used for reading from cluster
-  m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
+  // create callback to us so that we can catch returning io for cache
+	Context *our_finish = new C_CacheChunkRequest(new io::AioCompletion(), image_extents);
 
-  bufferlist newbl;
-  bufferlist::iterator it_bl = bl->begin();
-  bufferlist::iterator it_newbl = newbl.begin();
-  it_newbl.copy_in(12345,'x');
-  it_bl.get_off();
+  io::AioCompletion *chunk_aio_comp = io::AioCompletion::create_and_start<>(our_finish, &m_image_ctx, io::AIO_TYPE_READ);
+	chunk_aio_comp->set_request_count(1);
+  auto *chunk_req_comp = new io::ReadResult::C_ImageReadRequest(chunk_aio_comp, image_extents);
+  ldout(cct, 20) << chunk_req_comp << dendl;
+
+  // writeback's aio_read method used for reading from cluster
+  m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, chunk_req_comp);
+
+	on_finish->complete(0);
+
 }
 
 template <typename I>
@@ -272,10 +277,17 @@ void PrefetchImageCache<I>::flush(Context *on_finish) {
 }
 
 template <typename I>
-PrefetchImageCache<I>::C_CacheChunkRequest::C_CacheChunkRequest(io::AioCompletion *aio_completion,
-   const Extents image_extents) 
+PrefetchImageCache<I>::C_CacheChunkRequest::C_CacheChunkRequest(io::AioCompletion *aio_completion,  const Extents image_extents) 
  : aio_completion(aio_completion), image_extents(image_extents) { 
   
+}
+
+template <typename I>
+void PrefetchImageCache<I>::C_CacheChunkRequest::finish(int r) {
+  CephContext *cct = aio_completion->ictx->cct;
+	ldout(cct, 20) << dendl;
+
+	aio_completion->complete_request(r);
 }
 
 
