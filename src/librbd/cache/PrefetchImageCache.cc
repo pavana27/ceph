@@ -48,7 +48,6 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
 
-  bufferlist::iterator itr;
   std::vector<Extents> unique_list_of_extents;
   std::set<uint64_t> set_tracker;
 
@@ -99,8 +98,6 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 template <typename I>
 ImageCache::Extents PrefetchImageCache<I>::extent_to_chunks(std::pair<uint64_t, uint64_t> one_extent) {
 
-  Extents::iterator itr;         
-  Extents::iterator itrD;
   Extents chunkedExtent;
   uint64_t changedOffset;
   uint64_t changedLength;
