@@ -274,10 +274,19 @@ void PrefetchImageCache<I>::flush(Context *on_finish) {
 }
 
 template <typename I>
-PrefetchImageCache<I>::C_CacheChunkRequest::C_CacheChunkRequest(io::AioCompletion *aio_completion,  const Extents image_extents) 
+PrefetchImageCache<I>::C_CacheChunkRequest::C_CacheChunkRequest(io::AioCompletion *aio_completion,
+				  const Extents image_extents) 
  : aio_completion(aio_completion), image_extents(image_extents) { 
   
 }
+
+template <typename I>
+PrefetchImageCache<I>::C_CacheChunkRequest::C_CacheChunkRequest(io::AioCompletion *aio_completion,
+				  const Extents image_extents, bufferlist *dest_bl) 
+ : aio_completion(aio_completion), image_extents(image_extents), dest_bl(dest_bl) { 
+  
+}
+
 
 template <typename I>
 void PrefetchImageCache<I>::C_CacheChunkRequest::finish(int r) {

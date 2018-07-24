@@ -28,10 +28,13 @@ public:
   struct C_CacheChunkRequest : public Context {
     librbd::io::AioCompletion *aio_completion;
     Extents image_extents;
-    bufferlist bl;
+    bufferlist *dest_bl;
 
     explicit C_CacheChunkRequest(io::AioCompletion *aio_completion,
                        const Extents image_extents);
+    explicit C_CacheChunkRequest(io::AioCompletion *aio_completion,
+                       const Extents image_extents, bufferlist *dest_bl);
+
 
     void finish(int r) override;
   };
