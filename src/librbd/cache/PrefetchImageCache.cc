@@ -80,12 +80,6 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 
   // writeback's aio_read method used for reading from cluster
   m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
-
-  bufferlist newbl;
-  bufferlist::iterator it_bl = bl->begin();
-  bufferlist::iterator it_newbl = newbl.begin();
-  it_newbl.copy_in(12345,'x');
-  it_bl.get_off();
 }
 
 template <typename I>
