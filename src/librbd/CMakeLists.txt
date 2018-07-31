@@ -68,6 +68,7 @@ set(librbd_internal_srcs
   io/ObjectRequest.cc
   io/ReadResult.cc
   io/Utils.cc
+  io/CacheReadResult.cc
   journal/CreateRequest.cc
   journal/DemoteRequest.cc
   journal/ObjectDispatch.cc
