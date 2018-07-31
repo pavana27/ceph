@@ -8,6 +8,8 @@
 
 #include "ImageCache.h"
 #include "ImageWriteback.h"
+#include "librbd/io/AioCompletion.h"
+#include "librbd/io/ImageRequest.h"
 #include <deque>
 #include <unordered_map>
 

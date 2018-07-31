@@ -78,8 +78,13 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 
   ldout(cct, 20) << "extents chunked and deduped: " << unique_list_of_extents << dendl;
 
-  // writeback's aio_read method used for reading from cluster
-  m_image_writeback.aio_read(std::move(image_extents), bl, fadvise_flags, on_finish);
+  auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
+                                                      io::AIO_TYPE_READ);
+  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(image_extents),
+                              io::ReadResult{bl}, fadvise_flags, {});
+  req.set_bypass_image_cache();
+  req.send();
+
 }
 
 template <typename I>
