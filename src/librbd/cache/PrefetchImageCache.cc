@@ -79,11 +79,16 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
 
   ldout(cct, 20) << "extents chunked and deduped: " << unique_list_of_extents << dendl;
 
-  auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
-                                                      io::AIO_TYPE_READ);
+  io::AioCompletion *tmp_aio_comp = new io::AioCompletion();
+  tmp_aio_comp->ictx = &m_image_ctx;
+  tmp_aio_comp->set_request_count(1);
+  Context *our_finish = new io::CacheReadResult::C_ImageReadRequest(tmp_aio_comp, image_extents);
+  io::AioCompletion *aio_comp = io::AioCompletion::create_and_start(our_finish, &m_image_ctx,
+                                                                    io::AIO_TYPE_READ);
   io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(image_extents),
-                              io::ReadResult{bl}, fadvise_flags, {});
+                              io::CacheReadResult{bl}, fadvise_flags, {});
   req.set_bypass_image_cache();
+  ldout(cct, 20) << "sending image read request: " << &req << dendl;
   req.send();
 
 }

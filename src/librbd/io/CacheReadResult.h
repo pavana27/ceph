@@ -25,7 +25,18 @@ struct AioCompletion;
 template <typename> struct ObjectReadRequest;
 
 class CacheReadResult : public ReadResult {
+public:
 
+  struct C_ImageReadRequest : public Context {
+    AioCompletion *aio_completion;
+    Extents image_extents;
+    bufferlist bl;
+
+    C_ImageReadRequest(AioCompletion *aio_completion,
+                       const Extents image_extents);
+
+    void finish(int r) override;
+  };
 
 };
 
