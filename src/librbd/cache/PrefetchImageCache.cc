@@ -77,8 +77,9 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     unique_list_of_extents.push_back(fogRow);
   }
 
+  unique_list_of_extents[0].pop_back();
   Extents correct_image_extents = unique_list_of_extents[0];
-  ldout(cct, 25) << "fixed extent list: " << correct_image_extents << dendl;
+  ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
 
   io::AioCompletion *tmp_aio_comp = new io::AioCompletion();
   tmp_aio_comp->ictx = &m_image_ctx;
@@ -86,7 +87,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   Context *our_finish = new io::CacheReadResult::C_ImageReadRequest(tmp_aio_comp, image_extents);
   io::AioCompletion *aio_comp = io::AioCompletion::create_and_start(our_finish, &m_image_ctx,
                                                                     io::AIO_TYPE_READ);
-  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(image_extents),
+  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
                               io::CacheReadResult{bl}, fadvise_flags, {});
   req.set_bypass_image_cache();
   ldout(cct, 20) << "sending image read request: " << &req << dendl;
