@@ -77,7 +77,8 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     unique_list_of_extents.push_back(fogRow);
   }
 
-  ldout(cct, 20) << "extents chunked and deduped: " << unique_list_of_extents << dendl;
+  Extents correct_image_extents = unique_list_of_extents[0];
+  ldout(cct, 25) << "fixed extent list: " << correct_image_extents << dendl;
 
   io::AioCompletion *tmp_aio_comp = new io::AioCompletion();
   tmp_aio_comp->ictx = &m_image_ctx;
