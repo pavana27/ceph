@@ -47,6 +47,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   ldout(cct, 20) << "image_extents=" << image_extents << ", "
                  << "on_finish=" << on_finish << dendl;
 
+	// beginning of kludgy extent mess
   std::vector<Extents> unique_list_of_extents;
   std::set<uint64_t> set_tracker;
 
@@ -59,13 +60,10 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   ldout(cct, 25) << "\"temp\" after all extents chunked: "
      << temp << dendl;
 
-  //loops through the row
   for (const auto &row : temp) {
 
-    //temp list of extent
     Extents fogRow;
 
-    //loops through the column
     for (const auto &s : row) {
       //inserts into a set and checks to see if the element is already inserted
       auto ret = set_tracker.insert(s.first);
@@ -80,17 +78,20 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   unique_list_of_extents[0].pop_back();
   Extents correct_image_extents = unique_list_of_extents[0];
   ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
+	// end of kludgy extent mess
+
 
   io::AioCompletion *tmp_aio_comp = new io::AioCompletion();
   tmp_aio_comp->ictx = &m_image_ctx;
   tmp_aio_comp->set_request_count(1);
+
   Context *our_finish = new io::CacheReadResult::C_ImageReadRequest(tmp_aio_comp, image_extents);
   io::AioCompletion *aio_comp = io::AioCompletion::create_and_start(our_finish, &m_image_ctx,
                                                                     io::AIO_TYPE_READ);
   io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
                               io::CacheReadResult{bl}, fadvise_flags, {});
   req.set_bypass_image_cache();
-  ldout(cct, 20) << "sending image read request: " << &req << dendl;
+  ldout(cct, 20) << "bl=" << &bl << " sending image read request: " << &req << dendl;
   req.send();
 
 }
