@@ -76,11 +76,13 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     unique_list_of_extents.push_back(fogRow);
   }
 
-  ldout(cct, 20) << "extents chunked and deduped: " << unique_list_of_extents << dendl;
+	unique_list_of_extents[0].pop_back();
+  Extents correct_image_extents = unique_list_of_extents[0];
+  ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
 
   auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
                                                       io::AIO_TYPE_READ);
-  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(image_extents),
+  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
                               io::ReadResult{bl}, fadvise_flags, {});
   req.set_bypass_image_cache();
   req.send();
