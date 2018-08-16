@@ -102,6 +102,10 @@ void ReadResult::C_ImageReadRequest::finish(int r) {
     aio_completion->lock.Unlock();
     r = length;
   }
+	if (aio_completion->aio_type == io::AIO_TYPE_CACHE_READ) {
+		ldout(cct, 20) << "cache read path triggered in read result" << dendl;
+
+	}
 
   aio_completion->complete_request(r);
 }

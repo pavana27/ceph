@@ -116,6 +116,34 @@ private:
   int m_op_flags;
 };
 
+
+template <typename ImageCtxT = ImageCtx>
+class ImageCacheReadRequest : public ImageRequest<ImageCtxT> {
+public:
+  using typename ImageRequest<ImageCtxT>::Extents;
+
+  ImageCacheReadRequest(ImageCtxT &image_ctx, AioCompletion *aio_comp,
+                   Extents &&image_extents, ReadResult &&read_result,
+                   int op_flags, const ZTracer::Trace &parent_trace);
+
+protected:
+  int clip_request() override;
+
+  void send_request() override;
+  void send_image_cache_request() override;
+
+  aio_type_t get_aio_type() const override {
+    return AIO_TYPE_CACHE_READ;
+  }
+  const char *get_request_type() const override {
+    return "aio_cache_read";
+  }
+
+private:
+  int m_op_flags;
+};
+
+
 template <typename ImageCtxT = ImageCtx>
 class AbstractImageWriteRequest : public ImageRequest<ImageCtxT> {
 public:
@@ -349,6 +377,7 @@ private:
 
 extern template class librbd::io::ImageRequest<librbd::ImageCtx>;
 extern template class librbd::io::ImageReadRequest<librbd::ImageCtx>;
+extern template class librbd::io::ImageCacheReadRequest<librbd::ImageCtx>;
 extern template class librbd::io::AbstractImageWriteRequest<librbd::ImageCtx>;
 extern template class librbd::io::ImageWriteRequest<librbd::ImageCtx>;
 extern template class librbd::io::ImageDiscardRequest<librbd::ImageCtx>;

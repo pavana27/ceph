@@ -247,6 +247,120 @@ void ImageReadRequest<I>::send_image_cache_request() {
                                   req_comp);
 }
 
+
+template <typename I>
+ImageCacheReadRequest<I>::ImageCacheReadRequest(I &image_ctx, AioCompletion *aio_comp,
+                                      Extents &&image_extents,
+                                      ReadResult &&read_result, int op_flags,
+				      const ZTracer::Trace &parent_trace)
+  : ImageRequest<I>(image_ctx, aio_comp, std::move(image_extents), "cache_read",
+		    parent_trace),
+    m_op_flags(op_flags) {
+  aio_comp->read_result = std::move(read_result);
+}
+
+
+
+template <typename I>
+int ImageCacheReadRequest<I>::clip_request() {
+  int r = ImageRequest<I>::clip_request();
+  if (r < 0) {
+    return r;
+  }
+
+  uint64_t buffer_length = 0;
+  auto &image_extents = this->m_image_extents;
+  for (auto &image_extent : image_extents) {
+    buffer_length += image_extent.second;
+  }
+  this->m_aio_comp->read_result.set_clip_length(buffer_length);
+  return 0;
+}
+
+template <typename I>
+void ImageCacheReadRequest<I>::send_request() {
+  I &image_ctx = this->m_image_ctx;
+  CephContext *cct = image_ctx.cct;
+
+  ldout(cct, 10) << "sending request with "
+		 << "ImageCacheReadRequest::send_request()" << dendl;
+
+  auto &image_extents = this->m_image_extents;
+  if (image_ctx.cache && image_ctx.readahead_max_bytes > 0 &&
+      !(m_op_flags & LIBRADOS_OP_FLAG_FADVISE_RANDOM)) {
+    readahead(get_image_ctx(&image_ctx), image_extents);
+  }
+
+  AioCompletion *aio_comp = this->m_aio_comp;
+  librados::snap_t snap_id;
+  map<object_t,vector<ObjectExtent> > object_extents;
+  uint64_t buffer_ofs = 0;
+  {
+    // prevent image size from changing between computing clip and recording
+    // pending async operation
+    RWLock::RLocker snap_locker(image_ctx.snap_lock);
+    snap_id = image_ctx.snap_id;
+
+    // map image extents to object extents
+    for (auto &extent : image_extents) {
+      if (extent.second == 0) {
+        continue;
+      }
+
+      Striper::file_to_extents(cct, image_ctx.format_string, &image_ctx.layout,
+                               extent.first, extent.second, 0, object_extents,
+                               buffer_ofs);
+      buffer_ofs += extent.second;
+    }
+  }
+
+  // pre-calculate the expected number of read requests
+  uint32_t request_count = 0;
+  for (auto &object_extent : object_extents) {
+    request_count += object_extent.second.size();
+  }
+  aio_comp->set_request_count(request_count);
+
+  // issue the requests
+  for (auto &object_extent : object_extents) {
+    for (auto &extent : object_extent.second) {
+      ldout(cct, 20) << "oid " << extent.oid << " " << extent.offset << "~"
+                     << extent.length << " from " << extent.buffer_extents
+                     << dendl;
+
+      auto req_comp = new io::ReadResult::C_ObjectReadRequest(
+        aio_comp, extent.offset, extent.length,
+        std::move(extent.buffer_extents));
+      auto req = ObjectDispatchSpec::create_read(
+        &image_ctx, OBJECT_DISPATCH_LAYER_NONE, extent.oid.name,
+        extent.objectno, extent.offset, extent.length, snap_id, m_op_flags,
+        this->m_trace, &req_comp->bl, &req_comp->extent_map, req_comp);
+      req->send();
+    }
+  }
+
+  aio_comp->put();
+
+  image_ctx.perfcounter->inc(l_librbd_rd);
+  image_ctx.perfcounter->inc(l_librbd_rd_bytes, buffer_ofs);
+}
+
+template <typename I>
+void ImageCacheReadRequest<I>::send_image_cache_request() {
+  I &image_ctx = this->m_image_ctx;
+  assert(image_ctx.image_cache != nullptr);
+  ldout(image_ctx.cct, 25) << "inside cache request " << dendl;
+
+  AioCompletion *aio_comp = this->m_aio_comp;
+  aio_comp->set_request_count(1);
+
+  auto *req_comp = new io::ReadResult::C_ImageReadRequest(
+    aio_comp, this->m_image_extents);
+  image_ctx.image_cache->aio_read(std::move(this->m_image_extents),
+                                  &req_comp->bl, m_op_flags,
+                                  req_comp);
+}
+
 template <typename I>
 void AbstractImageWriteRequest<I>::send_request() {
   I &image_ctx = this->m_image_ctx;
@@ -674,6 +788,7 @@ int ImageCompareAndWriteRequest<I>::validate_object_extents(
 
 template class librbd::io::ImageRequest<librbd::ImageCtx>;
 template class librbd::io::ImageReadRequest<librbd::ImageCtx>;
+template class librbd::io::ImageCacheReadRequest<librbd::ImageCtx>;
 template class librbd::io::AbstractImageWriteRequest<librbd::ImageCtx>;
 template class librbd::io::ImageWriteRequest<librbd::ImageCtx>;
 template class librbd::io::ImageDiscardRequest<librbd::ImageCtx>;

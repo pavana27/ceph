@@ -36,6 +36,7 @@ typedef enum {
   AIO_TYPE_FLUSH,
   AIO_TYPE_WRITESAME,
   AIO_TYPE_COMPARE_AND_WRITE,
+  AIO_TYPE_CACHE_READ,
 } aio_type_t;
 
 enum FlushSource {

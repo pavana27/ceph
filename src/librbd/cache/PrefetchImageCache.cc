@@ -81,8 +81,8 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
 
   auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
-                                                      io::AIO_TYPE_READ);
-  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
+                                                      io::AIO_TYPE_CACHE_READ);
+  io::ImageCacheReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
                               io::ReadResult{bl}, fadvise_flags, {});
   req.set_bypass_image_cache();
   req.send();
