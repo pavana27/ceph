@@ -76,6 +76,8 @@ void AioCompletion::complete() {
       ictx->perfcounter->tinc(l_librbd_ws_latency, elapsed); break;
     case AIO_TYPE_COMPARE_AND_WRITE:
       ictx->perfcounter->tinc(l_librbd_cmp_latency, elapsed); break;
+		case AIO_TYPE_CACHE_READ: // for temporary prototyping, cache read uses plain read perfcounter
+			ictx->perfcounter->tinc(l_librbd_rd_latency, elapsed); break;
     default:
       lderr(cct) << "completed invalid aio_type: " << aio_type << dendl;
       break;

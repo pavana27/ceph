@@ -91,9 +91,15 @@ void ReadResult::C_ImageReadRequest::finish(int r) {
                  << dendl;
   if (r >= 0) {
     size_t length = 0;
+    if (aio_completion->aio_type == io::AIO_TYPE_CACHE_READ) {
+      ldout(cct, 20) << "cache read path triggered in read result" << dendl;
+    }
     for (auto &image_extent : image_extents) {
       length += image_extent.second;
     }
+    ldout(cct, 20) << "length=" << length << ", bl.length=" << bl.length() 
+                   << ", extents=" << image_extents
+                   << ", bl=" << &bl << dendl;
     assert(length == bl.length());
 
     aio_completion->lock.Lock();
@@ -102,11 +108,6 @@ void ReadResult::C_ImageReadRequest::finish(int r) {
     aio_completion->lock.Unlock();
     r = length;
   }
-	if (aio_completion->aio_type == io::AIO_TYPE_CACHE_READ) {
-		ldout(cct, 20) << "cache read path triggered in read result" << dendl;
-
-	}
-
   aio_completion->complete_request(r);
 }
 
@@ -122,6 +123,9 @@ void ReadResult::C_ObjectReadRequest::finish(int r) {
   CephContext *cct = aio_completion->ictx->cct;
   ldout(cct, 10) << "C_ObjectReadRequest: r=" << r
                  << dendl;
+  if (aio_completion->aio_type == io::AIO_TYPE_CACHE_READ) {
+      ldout(cct, 20) << "cache read path triggered in read result" << dendl;
+  }
 
   if (r == -ENOENT) {
     r = 0;
