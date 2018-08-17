@@ -49,6 +49,11 @@ void AioCompletion::finalize(ssize_t rval)
   if (rval >= 0 && aio_type == AIO_TYPE_READ) {
     read_result.assemble_result(cct);
   }
+	if (rval >= 0 && aio_type == AIO_TYPE_CACHE_READ) {
+		ldout(cct, 20) << "in finalize cache read branch" << dendl;
+    read_result.assemble_result(cct);
+  }
+
 }
 
 void AioCompletion::complete() {
