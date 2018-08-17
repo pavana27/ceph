@@ -107,6 +107,7 @@ void ReadResult::C_ImageReadRequest::finish(int r) {
       cct, bl, image_extents);
     aio_completion->lock.Unlock();
     r = length;
+    ldout(cct, 20) << "aio type: " << aio_completion->aio_type << dendl;
   }
   aio_completion->complete_request(r);
 }
@@ -139,11 +140,13 @@ void ReadResult::C_ObjectReadRequest::finish(int r) {
       extent_map[object_off] = bl.length();
     }
 
+    ldout(cct, 20) << "bl length before adding partial result=" << bl.length() << dendl;
     aio_completion->lock.Lock();
     aio_completion->read_result.m_destriper.add_partial_sparse_result(
       cct, bl, extent_map, object_off, buffer_extents);
     aio_completion->lock.Unlock();
 
+    ldout(cct, 20) << "bl length after adding partial result=" << bl.length() << dendl;
     r = object_len;
   }
 
