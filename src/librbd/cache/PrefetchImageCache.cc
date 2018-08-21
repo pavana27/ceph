@@ -76,7 +76,9 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     unique_list_of_extents.push_back(fogRow);
   }
 
-	unique_list_of_extents[0].pop_back();
+	if(unique_list_of_extents[0].size() > 1) {
+		unique_list_of_extents[0].pop_back();
+	}
   Extents correct_image_extents = unique_list_of_extents[0];
   ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
 
