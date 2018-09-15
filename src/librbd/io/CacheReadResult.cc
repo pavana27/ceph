@@ -4,10 +4,7 @@
 #include "librbd/io/CacheReadResult.h"
 #include "librbd/io/AioCompletion.h"
 #include "librbd/cache/PrefetchImageCache.h"
-<<<<<<< HEAD
 #include "librbd/ImageCtx.h"
-=======
->>>>>>> c961e921bb... Initial Commit
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
