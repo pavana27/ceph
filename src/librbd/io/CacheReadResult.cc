@@ -35,13 +35,7 @@ void CacheReadResult::C_ImageReadRequest::finish(int r) {
                  << " from finish in CacheReadResult"
                  << " and completion=" << aio_completion <<dendl;
 
-  //ldout(cct, 20) << "Returned image_extents :: "
-  //               << image_extents
-  //               << "returned bufferlist :: "
-  //               << bl
-  //               << dendl;
-
- if (r >= 0) {
+  if (r >= 0) {
     size_t length = 0;
     if (aio_completion->aio_type == io::AIO_TYPE_CACHE_READ) {
       ldout(cct, 20) << "cache read path triggered in read result" << dendl;
@@ -70,35 +64,12 @@ void CacheReadResult::C_ImageReadRequest::finish(int r) {
     ldout(cct, 20) << "bufferlist pointer after lock in CacheReadResult.cc:: " << bl << dendl;
 
     ldout(cct, 20) << "r = " << r << " length = " << length << dendl;
-    //auto imageCache = *(static_cast<librbd::cache::PrefetchImageCache<ImageCtx>*>((aio_completion->ictx->image_cache)));
-    //imageCache.aio_cache_returned_data(image_extents, &bl);
-//    assert(length == bl.length());
 
   }
 
   aio_completion->complete_request(r);
   ldout(cct, 20) << "bufferlist length after complete_request(r) in CacheReadResult.cc :: " << bl.length() << dendl;
   ldout(cct, 20) << "bufferlist pointer after complete_request(r) in CacheReadResult.cc:: " << bl << dendl;
-//  auto imageCache = *(static_cast<librbd::cache::PrefetchImageCache<ImageCtx>*>((aio_completion->ictx->image_cache)));
-//  imageCache.aio_cache_returned_data(image_extents, &bl);
-
 }
-
-
-void CacheReadResult::C_ImageReadRequest::aio_cache_read(){
-  CephContext *cct = aio_completion->ictx->cct;
-  ldout(cct, 10) << "Read the information from cache" << dendl;
-
-  ldout(cct, 10) << "image_extents :: "
-                 << image_extents
-                 << "bufferlist :: "
-                 << bl
-                 << dendl;
-
-  //auto imageCache = new cache::PrefetchImageCache(aio_completion->ictx);
-  //imageCache->aio_cache_returned_data(image_extents, bl);
-  assert(1);
-}
-
 } // namespace io
 } // namespace librbd

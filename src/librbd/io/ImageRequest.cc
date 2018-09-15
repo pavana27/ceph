@@ -18,6 +18,7 @@
 #include "common/perf_counters.h"
 #include "common/WorkQueue.h"
 #include "osdc/Striper.h"
+#include "CacheReadResult.h"
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
