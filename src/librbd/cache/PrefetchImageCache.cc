@@ -6,12 +6,9 @@
 #include "common/dout.h"
 #include "librbd/ImageCtx.h"
 #include "librbd/io/CacheReadResult.h"
-<<<<<<< HEAD
 #include "librbd/io/CacheReadResult.cc"
 //#include "CacheManager.h"
 #include "CacheManager.cc"
-=======
->>>>>>> c961e921bb... Initial Commit
 
 #define dout_subsys ceph_subsys_rbd
 #undef dout_prefix
@@ -112,7 +109,6 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     Extents correct_image_extents = unique_list_of_extents[0];
     ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
 
-<<<<<<< HEAD
     ldout(cct, 20) << "Nothing found in cache reaching out to cluster" << dendl;
     auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
                                                    io::AIO_TYPE_CACHE_READ);
@@ -125,42 +121,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
   } else {
     on_finish->complete(0);
   }
-=======
-  // io::AioCompletion *tmp_aio_comp = new io::AioCompletion();
-  // tmp_aio_comp->ictx = &m_image_ctx;
-  // tmp_aio_comp->set_request_count(1);
-  //
-  // ldount(cct, 20) << "temporary completion " << tmp_aio_comp << dendl;
 
-
-
-  auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
-                                                      io::AIO_TYPE_CACHE_READ);
-
-
-  io::CacheReadResult::aio_cache_read(aio_comp, correct_image_extents);
-
-  io::ImageCacheReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
-                              io::ReadResult{bl}, fadvise_flags, {});
-  req.set_bypass_image_cache();
-  req.send();
-
-  /*
-  io::AioCompletion *tmp_aio_comp = new io::AioCompletion();
-  tmp_aio_comp->ictx = &m_image_ctx;
-  tmp_aio_comp->set_request_count(1);
-  Context *our_finish = new io::CacheReadResult::C_ImageReadRequest(tmp_aio_comp, image_extents);
-  io::AioCompletion *aio_comp = io::AioCompletion::create_and_start(our_finish, &m_image_ctx,
-                                                                    io::AIO_TYPE_READ);
-  io::ImageReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
-                              io::CacheReadResult{bl}, fadvise_flags, {});
-  req.set_bypass_image_cache();
-  ldout(cct, 20) << "sending image read request: " << &req << dendl;
-  req.send();
-
-  */
-
->>>>>>> c961e921bb... Initial Commit
 }
 
 template <typename I>
@@ -274,12 +235,6 @@ void PrefetchImageCache<I>::init(Context *on_finish) {
   lru_queue = new LRUQueue();
   cache_entries = new ImageCacheEntries();
   cache_entries->reserve(HASH_SIZE);
-<<<<<<< HEAD
-=======
-
->>>>>>> c961e921bb... Initial Commit
-
-
   on_finish->complete(0);
 
   // init() called where? which context to use for on_finish?
@@ -299,10 +254,6 @@ void PrefetchImageCache<I>::init_blocking() {
   lru_queue = new LRUQueue();
   cache_entries = new ImageCacheEntries();
   cache_entries->reserve(HASH_SIZE);
-<<<<<<< HEAD
-=======
-
->>>>>>> c961e921bb... Initial Commit
 }
 
 
@@ -355,7 +306,6 @@ void PrefetchImageCache<I>::flush(Context *on_finish) {
  * Add the data to cache with appropriate state.
  */
 template <typename I>
-<<<<<<< HEAD
 void PrefetchImageCache<I>::aio_cache_returned_data(const Extents& image_extents, ceph::bufferlist *bl) {
 
   CephContext *cct = m_image_ctx.cct;
@@ -382,51 +332,6 @@ void PrefetchImageCache<I>::aio_cache_returned_data(const Extents& image_extents
                            << "bufferlist length :: " << bl1.length()
                            << dendl;
   }
-=======
-void PrefetchImageCache<I>::aio_cache_returned_data(Extents &&image_extents, ceph::bufferlist *bl) {
-
-        CephContext *cct = m_image_ctx.cct;
-        ldout(cct, 20) << "caching the returned data "
-                        << " image_extents :: " << image_extents
-                        << " bufferlist :: " << bl
-                        << dendl;
-
-    // image_extents is a vector of 2 unit64-t, cache-entries accept a pair of
-    // unit64_t and bl
-    // before inserting, loop thru bufferlist and image_extents to get the matting entries
-    // to insert into cache
-
-    // check if image_extents size and bufferlist size are equal
-    if(image_extents.size() == bl->length()) {
-
-       /*
-          1. Loop through the bufferlist.
-          2. For each buffer in the bufferlist, compare against each extent in the Image extent vector.
-          3. Each extent has vector of offset and length of data of RBD Server
-          4. Look at the data present in RBD using offset and compare with data in the buffer from 1
-          5  If matches, insert into cache with offset and buffer list pointer.
-        */
-
-        ceph::bufferlist localBuffers = *bl;
-        bool matched = true;
-        for(const auto be: localBuffers) {
-           for(const auto &itr: image_extents) {
-                Extents extent = extent_to_chunks(itr);
-                for(const auto row:extent){
-                   uint64_t p = row.first;
-                   uint64_t* pt = (uint64_t *)&p;
-
-                   if (*(pt) != be) {
-                      matched = false;
-                   } else {
-                      // insert_or_assign the record in cache
-                      cache_entries->insert_or_assign(row.first, bl);
-                  }
-                }
-            }
-        }
-    }
->>>>>>> c961e921bb... Initial Commit
 }
 
 

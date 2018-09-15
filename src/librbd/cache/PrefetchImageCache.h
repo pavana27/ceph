@@ -62,10 +62,6 @@ private:
   // map for cache entries
   typedef std::unordered_map<uint64_t, ceph::bufferlist *> ImageCacheEntries;
   ImageCacheEntries *cache_entries;
-<<<<<<< HEAD
-=======
-
->>>>>>> c961e921bb... Initial Commit
   // queue for handling LRU eviction
   typedef std::deque<uint64_t> LRUQueue;
   LRUQueue *lru_queue;

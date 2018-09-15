@@ -17,15 +17,10 @@
 namespace librbd {
 namespace io {
 
-<<<<<<< HEAD
-
-=======
->>>>>>> c961e921bb... Initial Commit
 CacheReadResult::C_ImageReadRequest::C_ImageReadRequest(
     AioCompletion *aio_completion, const Extents image_extents)
   : aio_completion(aio_completion), image_extents(image_extents) {
 
-<<<<<<< HEAD
   CephContext *cct = aio_completion->ictx->cct;
   ldout(cct, 10) << "Entering CacheReadResult::C_ImageReadRequest"
 		  << dendl;
@@ -34,32 +29,21 @@ CacheReadResult::C_ImageReadRequest::C_ImageReadRequest(
 
   ldout(cct, 10) << "Exiting CacheReadResult::C_ImageReadRequest"
 		 << dendl;
-=======
-  aio_completion->add_request();
-}
 
-void CacheReadResult::C_ImageReadRequest::aio_cache_read(AioCompletion aio_completion, Extents image_extents) {
-  ldout(cct, 10) << "C_ImageReadRequest: aio_completion "
-                 << aio_completion
-                 << " image_extents "
-                   << image_extents
-                   << dendl;
->>>>>>> c961e921bb... Initial Commit
 }
 
 void CacheReadResult::C_ImageReadRequest::finish(int r) {
   CephContext *cct = aio_completion->ictx->cct;
-<<<<<<< HEAD
   ldout(cct, 20) << "C_ImageReadRequest: r=" << r
                  << " from finish in CacheReadResult"
                  << " and completion=" << aio_completion <<dendl;
- 
+
   //ldout(cct, 20) << "Returned image_extents :: "
   //               << image_extents
   //               << "returned bufferlist :: "
   //               << bl
   //               << dendl;
-  
+
  if (r >= 0) {
     size_t length = 0;
     if (aio_completion->aio_type == io::AIO_TYPE_CACHE_READ) {
@@ -85,7 +69,7 @@ void CacheReadResult::C_ImageReadRequest::finish(int r) {
     aio_completion->lock.Unlock();
 
     r = length;
-    
+
     ldout(cct, 20) << "bufferlist pointer after lock in CacheReadResult.cc:: " << bl << dendl;
 
     ldout(cct, 20) << "r = " << r << " length = " << length << dendl;
@@ -94,13 +78,13 @@ void CacheReadResult::C_ImageReadRequest::finish(int r) {
 //    assert(length == bl.length());
 
   }
-  
+
   aio_completion->complete_request(r);
-  ldout(cct, 20) << "bufferlist length after complete_request(r) in CacheReadResult.cc :: " << bl.length() << dendl;  
+  ldout(cct, 20) << "bufferlist length after complete_request(r) in CacheReadResult.cc :: " << bl.length() << dendl;
   ldout(cct, 20) << "bufferlist pointer after complete_request(r) in CacheReadResult.cc:: " << bl << dendl;
 //  auto imageCache = *(static_cast<librbd::cache::PrefetchImageCache<ImageCtx>*>((aio_completion->ictx->image_cache)));
 //  imageCache.aio_cache_returned_data(image_extents, &bl);
-  
+
 }
 
 
@@ -116,18 +100,6 @@ void CacheReadResult::C_ImageReadRequest::aio_cache_read(){
 
   //auto imageCache = new cache::PrefetchImageCache(aio_completion->ictx);
   //imageCache->aio_cache_returned_data(image_extents, bl);
-
-=======
-  ldout(cct, 10) << "C_ImageReadRequest: r=" << r
-                 << " from finish in CacheReadResult"
-                 << " and completion=" << aio_completion <<dendl;
-  ldout(cct, 10) << "Returned image_extents :: "
-                 << image_extents
-                 << "returned bufferlist :: "
-                 << bl
-                 << dendl;
-  //cache::PrefetchImageCache::aio_cache_returned_data(image_extents, bl);
->>>>>>> c961e921bb... Initial Commit
   assert(1);
 }
 

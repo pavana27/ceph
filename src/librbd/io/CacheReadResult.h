@@ -35,58 +35,12 @@ public:
     C_ImageReadRequest(AioCompletion *aio_completion,
                        const Extents image_extents);
 
-<<<<<<< HEAD
-    void finish(int r) override;
 
-    void aio_cache_read();
-  };
-
-/*private:
-  struct Empty {
-  };
-
-  struct Linear {
-    char *buf;
-    size_t buf_len;
-
-    Linear(char *buf, size_t buf_len) : buf(buf), buf_len(buf_len) {
-    }
-  };
-
-  struct Vector {
-    const struct iovec *iov;
-    int iov_count;
-
-    Vector(const struct iovec *iov, int iov_count)
-      : iov(iov), iov_count(iov_count) {
-    }
-  };
-
-  struct Bufferlist {
-    ceph::bufferlist *bl;
-
-    Bufferlist(ceph::bufferlist *bl) : bl(bl) {
-    }
-  };
-
-  typedef boost::variant<Empty,
-                         Linear,
-                         Vector,
-                         Bufferlist> Buffer;
-  struct SetClipLengthVisitor;
-  struct AssembleResultVisitor;
-
-  Buffer m_buffer;
-  Striper::StripedReadResult m_destriper;
-*/
-=======
     void aio_cache_read(AioCompletion aio_completion,
                        const Extents image_extents);
 
     void finish(int r) override;
   };
-
->>>>>>> c961e921bb... Initial Commit
 };
 
 } // namespace io
