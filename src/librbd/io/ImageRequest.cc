@@ -110,7 +110,7 @@ void ImageRequest<I>::send() {
     return;
   }
 
-  ldout(cct, 10) << "bypass image cache? " << m_bypass_image_cache 
+  ldout(cct, 10) << "bypass image cache? " << m_bypass_image_cache
 		 << " and addr of image cache: " << m_image_ctx.image_cache
 		 << dendl;
 
@@ -167,8 +167,8 @@ template <typename I>
 void ImageReadRequest<I>::send_request() {
   I &image_ctx = this->m_image_ctx;
   CephContext *cct = image_ctx.cct;
-  
-  ldout(cct, 10) << "sending request normally with " 
+
+  ldout(cct, 10) << "sending request normally with "
 		 << "ImageReadRequest::send_request()" << dendl;
 
   auto &image_extents = this->m_image_extents;
@@ -240,7 +240,7 @@ void ImageReadRequest<I>::send_image_cache_request() {
   AioCompletion *aio_comp = this->m_aio_comp;
   aio_comp->set_request_count(1);
 
-  auto *req_comp = new io::ReadResult::C_ImageReadRequest(
+  auto *req_comp = new io::CacheReadResult::C_ImageReadRequest(
     aio_comp, this->m_image_extents);
   image_ctx.image_cache->aio_read(std::move(this->m_image_extents),
                                   &req_comp->bl, m_op_flags,
@@ -354,7 +354,7 @@ void ImageCacheReadRequest<I>::send_image_cache_request() {
   AioCompletion *aio_comp = this->m_aio_comp;
   aio_comp->set_request_count(1);
 
-  auto *req_comp = new io::ReadResult::C_ImageReadRequest(
+  auto *req_comp = new io::CacheReadResult::C_ImageReadRequest(
     aio_comp, this->m_image_extents);
   image_ctx.image_cache->aio_read(std::move(this->m_image_extents),
                                   &req_comp->bl, m_op_flags,

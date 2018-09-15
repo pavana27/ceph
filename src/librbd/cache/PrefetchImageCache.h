@@ -51,8 +51,9 @@ public:
 
   void invalidate(Context *on_finish) override;
   void flush(Context *on_finish) override;
-  
-  
+
+  // new method to the returned data to cache
+  void aio_cache_returned_data(const Extents& image_extents, ceph::bufferlist *bl);
 
 private:
   ImageCtxT &m_image_ctx;
@@ -61,16 +62,19 @@ private:
   // map for cache entries
   typedef std::unordered_map<uint64_t, ceph::bufferlist *> ImageCacheEntries;
   ImageCacheEntries *cache_entries;
+<<<<<<< HEAD
+=======
 
-  // queue for handling LRU eviction 
+>>>>>>> c961e921bb... Initial Commit
+  // queue for handling LRU eviction
   typedef std::deque<uint64_t> LRUQueue;
   LRUQueue *lru_queue;
 
-  Extents extent_to_chunks(std::pair<uint64_t, uint64_t> image_extents); 
+  Extents extent_to_chunks(std::pair<uint64_t, uint64_t> image_extents);
 
 };
 
-	
+
 
 } // namespace cache
 } // namespace librbd
