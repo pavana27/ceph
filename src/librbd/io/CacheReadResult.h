@@ -36,8 +36,7 @@ public:
                        const Extents image_extents);
 
 
-    void aio_cache_read(AioCompletion aio_completion,
-                       const Extents image_extents);
+    void aio_cache_read();
 
     void finish(int r) override;
   };
