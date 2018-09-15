@@ -84,7 +84,7 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
       temp.push_back(extent_to_chunks(it));
     }
 
-    ldout(cct, 25) << "\"temp\" after all extents chunked: "
+    ldout(cct, 20) << "\"temp\" after all extents chunked: "
        << temp << dendl;
 
     //loops through the row
