@@ -15,8 +15,8 @@ namespace cache {
 	class CacheManager{
 		public:
 			static CacheManager* Instance(CephContext* m_cct);
-			void insert(CephContext* m_cct, uint64_t image_extents_addr, ceph::bufferlist bl);
-			ceph::bufferlist get(CephContext* m_cct, uint64_t image_extents_addr);
+			void insert(CephContext* m_cct, uint64_t image_extents_addr, bufferptr bl);
+			bufferptr get(CephContext* m_cct, uint64_t image_extents_addr);
 
 		private:
 			CacheManager(){};

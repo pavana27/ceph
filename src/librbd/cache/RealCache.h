@@ -14,14 +14,14 @@ namespace librbd{
     class RealCache{
       public:
         static RealCache *Instance(CephContext *m_cct);
-        void insert(CephContext* m_cct, uint64_t image_extents_addr, ceph::bufferlist bl);
-  			ceph::bufferlist get(CephContext* m_cct, uint64_t image_extent_addr);
+        void insert(CephContext* m_cct, uint64_t image_extents_addr, bufferptr bl);
+  	bufferptr get(CephContext* m_cct, uint64_t image_extent_addr);
 
       private:
         RealCache(){};
         ~RealCache();
         CephContext *m_cct;
-        typedef std::unordered_map<uint64_t, ceph::bufferlist> ImageCacheEntries;
+        typedef std::unordered_map<uint64_t, bufferptr> ImageCacheEntries;
         static RealCache *m_pInstance;
         ImageCacheEntries *cache_entries;
         typedef std::list<uint64_t> LRUList;

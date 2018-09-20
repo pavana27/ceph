@@ -3,6 +3,7 @@
 
 #include "PrefetchImageCache.h"
 #include "include/buffer.h"
+//#include "common/buffer.cc"
 #include "common/dout.h"
 #include "librbd/ImageCtx.h"
 #include "librbd/io/CacheReadResult.h"
@@ -46,38 +47,16 @@ PrefetchImageCache<I>::PrefetchImageCache(ImageCtx &image_ctx)
 template <typename I>
 void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
                                         int fadvise_flags, Context *on_finish) {
-  CephContext *cct = m_image_ctx.cct;
-  ldout(cct, 20) << "image_extents=" << image_extents << ", "
-                 << "on_finish=" << on_finish << dendl;
+    CephContext *cct = m_image_ctx.cct;
+    ldout(cct, 20) << "image_extents=" << image_extents << ", "
+                   << "on_finish=" << on_finish << dendl;
 
-  std::vector<Extents> unique_list_of_extents;
-  std::set<uint64_t> set_tracker;
-  bool no_match_in_cache;
+    std::vector<Extents> unique_list_of_extents;
+    std::set<uint64_t> set_tracker;
+    bool no_match_in_cache = true;
 
-  ldout(cct, 20) << " extents before chunking: " << image_extents << dendl;
+    ldout(cct, 20) << " extents before chunking: " << image_extents << dendl;
 
-  size_t length = 0;
-	uint64_t image_extent_address;
-  for (auto &image_extent : image_extents) {
-      length = image_extent.second;
-      image_extent_address = image_extent.first;
-	    ldout(cct, 20) << "Cache entries :: " << cache_entries << dendl;
-
-	    bufferlist tempbl = CacheManager::Instance(cct)->get(cct, image_extent_address);
-	    ldout(cct, 20) << "Bufferlist from cache :: " << &tempbl << dendl;
-	    ldout(cct, 20) << "Image Extent :: " << image_extent_address << " BufferList :: " << tempbl << dendl;
-	    ceph::bufferlist bl1 = tempbl;
-	    ldout(cct, 20) << "Expected buffer lenght :: " << length << dendl;
-	    ldout(cct, 20) << "Bufferlist content from cache" << bl1 << dendl;
-	    if(bl1.length() == length) {
-		      bl = &tempbl;
-		        no_match_in_cache = false;
-	    } else {
-		      no_match_in_cache = true;
-	    }
-	}
-
-  if(no_match_in_cache){
     //get the extents, then call the chunking function
     std::vector<Extents> temp;
     for(auto &it : image_extents) {
@@ -109,18 +88,46 @@ void PrefetchImageCache<I>::aio_read(Extents &&image_extents, bufferlist *bl,
     Extents correct_image_extents = unique_list_of_extents[0];
     ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
 
-    ldout(cct, 20) << "Nothing found in cache reaching out to cluster" << dendl;
-    auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
-                                                   io::AIO_TYPE_CACHE_READ);
+    // check in the cache for the chunks
 
-    io::ImageCacheReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
-                          io::ReadResult{bl}, fadvise_flags, {});
-    req.set_bypass_image_cache();
-    req.send();
+    /*size_t length = 0;
+  	uint64_t image_extent_address;
+    Extents uncached_chunks;
+    for (auto &chunk : correct_image_extents) {
+        length = chunk.second;
+        image_extent_address = chunk.first;
+  	    ldout(cct, 20) << "Cache entries :: " << cache_entries << dendl;
 
-  } else {
-    on_finish->complete(0);
-  }
+  	    bufferlist tempbl = CacheManager::Instance(cct)->get(cct, image_extent_address);
+  	    ldout(cct, 20) << "Bufferlist from cache :: " << &tempbl << dendl;
+  	    ldout(cct, 20) << "Image Extent :: " << image_extent_address << " BufferList :: " << tempbl << dendl;
+  	    ceph::bufferlist bl1 = tempbl;
+  	    ldout(cct, 20) << "Expected buffer lenght :: " << length << dendl;
+  	    ldout(cct, 20) << "Bufferlist content from cache" << bl1 << dendl;
+  	    if(bl1.length() == length) {
+  		      bl = &tempbl;
+  		      //no_match_in_cache = false;
+  	    } else {
+            uncached_chunks.push_back(chunk);
+  		      no_match_in_cache = true;
+  	    }
+  	}
+
+    ldout(cct, 20) << "chunks not in cache :: " << uncached_chunks << dendl;
+*/
+    if(no_match_in_cache){
+      ldout(cct, 20) << "some chunks are not cached, reaching out to cluster for those chunks" << dendl;
+
+      auto aio_comp = io::AioCompletion::create_and_start(on_finish, &m_image_ctx,
+                                                     io::AIO_TYPE_CACHE_READ);
+
+      io::ImageCacheReadRequest<I> req(m_image_ctx, aio_comp, std::move(correct_image_extents),
+                            io::ReadResult{bl}, fadvise_flags, {});
+      req.set_bypass_image_cache();
+      req.send();
+    } else {
+      on_finish->complete(0);
+    }
 
 }
 
@@ -313,22 +320,63 @@ void PrefetchImageCache<I>::aio_cache_returned_data(const Extents& image_extents
                   << " image_extents :: " << image_extents
                   << " bufferlist :: " << bl
                   << dendl;
-	ceph::bufferlist bl1 = *bl;
-  size_t length = 0;
-	uint64_t image_extent_address;
-  for (auto &image_extent : image_extents) {
-    length = image_extent.second;
-    image_extent_address = image_extent.first;
-  }
-  ldout(cct, 20) << "length=" << length << ", bl.length=" << bl1.length()
-                 << ", extents=" << image_extents << dendl;
 
-  if(length == bl1.length()) {
-		CacheManager *cacheManager = CacheManager::Instance(cct);
-		cacheManager->insert(cct, image_extent_address, bl1);
+	ceph::bufferlist bl1 = *bl;
+
+  //get the extents, then call the chunking function
+  std::vector<Extents> temp;
+  std::vector<Extents> unique_list_of_extents;
+  std::set<uint64_t> set_tracker;
+  for(auto &it : image_extents) {
+    temp.push_back(extent_to_chunks(it));
+  }
+
+  ldout(cct, 20) << "\"temp\" after all extents chunked: " << temp << dendl;
+
+  //loops through the row
+  for (const auto &row : temp) {
+    //temp list of extent
+    Extents fogRow;
+    //loops through the column
+    for (const auto &s : row) {
+      //inserts into a set and checks to see if the element is already inserted
+      auto ret = set_tracker.insert(s.first);
+      //if inserted, insert into the vector of list
+      if (ret.second==true) {
+        fogRow.push_back(s);
+      }
+    }
+    unique_list_of_extents.push_back(fogRow);
+  }
+
+  if(unique_list_of_extents[0].size() > 1) {
+     unique_list_of_extents[0].pop_back();
+  }
+  Extents correct_image_extents = unique_list_of_extents[0];
+  ldout(cct, 20) << "fixed extent list: " << correct_image_extents << dendl;
+
+ // ldout(cct, 20) << "buffers :: " << bl1.buffers() << dendl;
+
+  ldout(cct, 20) << "length=" << correct_image_extents.size() << ", bl.length=" << bl1.length()
+                 << ", buffers=" << bl1.get_num_buffers() << dendl;
+
+  if(correct_image_extents.size() == bl1.get_num_buffers()) {
+	int i = 0;
+	for(const auto &buf : bl1.buffers()){
+		int j = 0;	
+		for(auto &it1: correct_image_extents){
+			if(i == j){
+				CacheManager *cacheManager = CacheManager::Instance(cct);
+				cacheManager->insert(cct, it1.first, buf);
+				break;
+			}
+			j ++;
+		}
+		i++;
+	}
   } else {
     ldout(cct, 20) << "Image extents and buffer list size is not same :: "
-                           << "image_extents.size() :: " << length
+                           << "image_extents.size() :: " << correct_image_extents.size()
                            << "bufferlist length :: " << bl1.length()
                            << dendl;
   }
@@ -339,3 +387,4 @@ void PrefetchImageCache<I>::aio_cache_returned_data(const Extents& image_extents
 } // namespace librbd
 
 template class librbd::cache::PrefetchImageCache<librbd::ImageCtx>;
+
